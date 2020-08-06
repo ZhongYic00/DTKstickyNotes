@@ -2,7 +2,7 @@
 
 
 MainWindow::MainWindow(ZBackend *back,QWidget *parent) :
-    DMainWindow(parent),curNote(nullptr)
+    DMainWindow(parent),curNote(nullptr),modified(false)
 {
     backend=back;
 
@@ -14,6 +14,7 @@ MainWindow::MainWindow(ZBackend *back,QWidget *parent) :
 
     connect(notesListView,&ZListView::mousePressChanged,this,&MainWindow::display);
     connect(noteEditView,&Editor::contentChanged,this,&MainWindow::updateOverview);
+    connect(noteEditView,&Editor::contentChanged,[this](){modified=true;});
     connect(notesListView,&ZListView::addButtonClicked,this,&MainWindow::createNewNote);
     connect(notesListView,&ZListView::removeItemsTriggered,this,&MainWindow::removeNotes);
     initNotesListView();
@@ -84,8 +85,10 @@ void MainWindow::updateHtml(const QString &html)
 }
 void MainWindow::save()
 {
+    if(!modified)return ;
     updateHtml(noteEditView->getContentRich());
     backend->save();
+    modified=false;
 }
 void MainWindow::createNewNote()
 {

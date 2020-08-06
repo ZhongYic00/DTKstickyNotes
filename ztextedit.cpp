@@ -42,14 +42,12 @@ void ZTextEdit::insertFromMimeData(const QMimeData *src)
         cursor.beginEditBlock();
         auto bak=cursor.charFormat();
         auto blkbak=cursor.blockFormat();
-        bak.setProperty(QTextCharFormat::FontPixelSize,-1);
         auto fmt=QTextCharFormat(bak);
         fmt.clearProperty(QTextCharFormat::FontWeight);
         fmt.clearProperty(QTextCharFormat::FontItalic);
         fmt.clearProperty(QTextCharFormat::FontUnderline);
         fmt.clearProperty(QTextCharFormat::FontStrikeOut);
         fmt.setProperty(QTextCharFormat::FontPointSize,bak.property(QTextCharFormat::FontPointSize));
-        qDebug()<<bak.property(QTextCharFormat::FontPointSize).toInt();
         fmt.setForeground(bak.foreground());
         fmt.setBackground(bak.background());
         auto blkfmt=QTextBlockFormat();

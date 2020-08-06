@@ -35,6 +35,7 @@ private:
     Editor *noteEditView;
     ZBackend *backend;
     ZListItem *curNote;
+    bool modified;
 
     void display(DSimpleListItem *item);
     void reset();
