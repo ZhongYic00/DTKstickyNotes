@@ -1,0 +1,23 @@
+#ListView{
+border-right: 2 solid #DDDDDD;
+min-width:300;
+max-width:300;
+background:#FFFFFF;
+}
+QMainWindow{
+padding:0;
+margin:0;
+}
+#textEditor{
+margin:5;
+}
+#statusBar{
+min-height:15;
+max-height:15;
+}
+#toolBarBox{
+background:#FFFFFF;
+border:none;
+border-radius:15;
+margin:10;
+}

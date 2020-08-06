@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/images">
+        <file alias="add-btn">resources/add-btn.svg</file>
+        <file alias="font-bold">resources/font-bold.svg</file>
+        <file alias="font-italic">resources/font-italic.svg</file>
+        <file alias="font-linethrough">resources/font-linethrough.svg</file>
+        <file alias="font-underline">resources/font-underline.svg</file>
+        <file alias="inscode">resources/inscode.svg</file>
+        <file alias="insimage">resources/insimage.svg</file>
+        <file alias="inslist">resources/inslist.svg</file>
+        <file alias="insorderedlist">resources/insorderedlist.svg</file>
+        <file alias="insurl">resources/insurl.svg</file>
+        <file alias="logo.svg">resources/logo.svg</file>
+        <file alias="logo.svg.png">resources/logo.svg.png</file>
+        <file alias="logo256">resources/logo256x256.png</file>
+        <file alias="splitline">resources/splitline.svg</file>
+        <file alias="trash-empty">resources/trash-empty.svg</file>
+        <file alias="ZhYiclogo_v2">resources/ZhYiclogo_v2.svg</file>
+    </qresource>
+    <qresource prefix="/stylesheets">
+        <file>mainwindow.qss</file>
+    </qresource>
+</RCC>
