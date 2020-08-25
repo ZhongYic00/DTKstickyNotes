@@ -35,7 +35,9 @@ SOURCES += \
     mdialog.cpp \
     ztextedit.cpp \
     zlistview.cpp \
-    znote.cpp
+    znote.cpp \
+    zlist.cpp \
+    fhqtreap.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -44,7 +46,8 @@ HEADERS += \
     mdialog.h \
     ztextedit.h \
     zlistview.h \
-    znote.h
+    znote.h \
+    zlist.h
 
 FORMS +=
 

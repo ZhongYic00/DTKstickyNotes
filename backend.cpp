@@ -2,68 +2,44 @@
 
 ZBackend::ZBackend()
 {
-    QFile input("stickyNotes.json");
-    input.open(QFile::ReadOnly|QFile::Text);
-    QTextStream jsonText(&input);
-//    QString jsonTextAll=jsonText.readAll();
-    auto tmpStrList=QVariant(QJsonDocument::fromJson(jsonText.readAll().toUtf8()).array().toVariantList()).toList();
-//    qDebug()<<tmpStrList;
-    for(auto i:tmpStrList)
-    {
-        auto j=i.toJsonObject();
-        data[QDateTime::fromString(j["updateTime"].toString())]=
-                new ZNote(QDateTime::fromString(j["createTime"].toString()),QDateTime::fromString(j["updateTime"].toString()),j["html"].toString(),j["overview"].toString());
-    }
-    input.close();
-    tmpFile.setFileName("~stickyNotes.json");
-    tmpFile.open(QFile::WriteOnly);
 }
-ZNote* ZBackend::addNote()
+void ZBackend::save(const QList<ZNote> &src)//下一步实现双文件储存，防数据遗失
 {
-    auto cur=QDateTime::currentDateTime();
-    data[cur]=new ZNote(cur,cur);
-    save();
-    return data[cur];
-}
-void ZBackend::removeNote(ZNote *note)
-{
-    if(note)
-    {
-        data.erase(note->lastModified());
-        delete note;
-    }
-}
-void ZBackend::updateNote(QDateTime lastModified, QString rich)
-{
-    if(data[lastModified])
-    {
-        auto mdf=data[lastModified];
-        mdf->update(rich,mdf->getOverview());
-        data.erase(lastModified);
-        data[mdf->lastModified()]=mdf;
-    }
-    save();
-}
-void ZBackend::updateOverview(QDateTime lastModified, QString plain)
-{
-    if(data[lastModified])data[lastModified]->update(plain);
-}
-void ZBackend::save()
-{
-    QFile output("stickyNotes.json");
+    QFile output(storageFileName());
     output.open(QFile::WriteOnly|QFile::Text);
     QTextStream outputStream(&output);
-    QJsonArray array;
-    for(auto i:data)
-    {
-        array.append(QJsonValue(i.second->printObject()));
-    }
-    QJsonDocument doc;
-    doc.setArray(array);
-    outputStream<<doc.toJson(QJsonDocument::Compact);
+    outputStream<<exportAsJson(src).toJson(QJsonDocument::Compact);
     output.close();
 }
-std::vector<std::pair<QDateTime,ZNote*> > ZBackend::getDataList() const
+QList<ZNote> ZBackend::getSavedDataList() const
 {
-    return std::vector<std::pair<QDateTime,ZNote*> >(data.begin(),data.end());
+    auto objList=QVariant(QJsonDocument::fromJson(readWholeFile(storageFileName()).toUtf8()).array().toVariantList()).toList();
+    QList<ZNote> rt;
+    for(auto i:objList)
+    {
+        auto obj=i.toJsonObject();
+        rt.push_back(ZNote(obj));
+    }
+    return rt;
+}
+inline QString ZBackend::storageFileName() const
+{
+    return "stickyNotes.json";
+}
+inline QString ZBackend::readWholeFile(const QString &filename) const
+{
+    QFile input(filename);
+    input.open(QFile::ReadOnly|QFile::Text);
+    QTextStream inputStream(&input);
+    QString rt=inputStream.readAll();
+    qDebug()<<"import file content:\n"<<rt;
+    input.close();
+    return rt;
+}
+QJsonDocument ZBackend::exportAsJson(const QList<ZNote> &src)
+{
+    QJsonArray array;
+    for(auto i:src)
+        array.append(QJsonValue(i.jsonObject()));
+    return QJsonDocument(array);
 }

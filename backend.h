@@ -8,15 +8,12 @@ class ZBackend
 public:
     ZBackend();
     ~ZBackend();
-    ZNote* addNote();
-    void removeNote(ZNote *note);
-    void updateOverview(QDateTime lastModified,QString plain);
-    void updateNote(QDateTime lastModified,QString rich);
-    void save();
-    std::vector<std::pair<QDateTime,ZNote*> > getDataList()const;
+    QList<ZNote> getSavedDataList() const;
+    void save(const QList<ZNote> &src);
 private:
-    std::map<QDateTime,ZNote*> data;
-    QFile tmpFile;
+    QJsonDocument exportAsJson(const QList<ZNote> &src);
+    inline QString storageFileName() const;
+    inline QString readWholeFile(const QString &filename) const;
 };
 
 #endif // BACKEND_H

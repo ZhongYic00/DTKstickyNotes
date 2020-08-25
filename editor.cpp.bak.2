@@ -1,0 +1,113 @@
+#include "editor.h"
+
+Editor::Editor(QWidget *parent):QWidget(parent)
+{
+    textEditor=new DTextEdit(this);
+    textEditor->setObjectName("textEditor");
+    textEditor->installEventFilter(this);
+    qDebug()<<textEditor;
+    textEditor->setText("AAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaa");
+
+    toolBar=initToolBar();
+    toolBar->installEventFilter(this);
+
+    QStackedLayout *layout=new QStackedLayout(this);
+    layout->setStackingMode(QStackedLayout::StackAll);
+    layout->addWidget(toolBar);
+    layout->setAlignment(toolBar,Qt::AlignBottom);
+    layout->addWidget(textEditor);
+    textEditor->setFocus();
+    setLayout(layout);
+}
+QWidget* Editor::initToolBar()
+{
+    QWidget *layer=new TransparentWidget(this);
+    QWidget *buttonBox=initToolButtons(layer);
+    layer->setObjectName("toolBarLayer");
+    layer->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+//    layer->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    QVBoxLayout *layout=new QVBoxLayout(layer);
+    layer->setLayout(layout);
+    layout->addStretch();
+
+    QHBoxLayout *bar=new QHBoxLayout(layer);
+    layout->addLayout(bar);
+//    bar->setWindowFlag(Qt::WindowStaysOnTopHint);
+//    bar->setSizePolicy(QSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum));
+    bar->addStretch();
+    bar->addWidget(buttonBox);
+    bar->addStretch();
+    return layer;
+}
+QWidget* Editor::initToolButtons(QWidget *parent)
+{
+    QWidget *box=new QWidget(parent);
+    box->setObjectName("toolBarBox");
+    QHBoxLayout *layout=new QHBoxLayout(box);
+    box->setLayout(layout);
+
+    auto bold=new QPushButton(QIcon(":/images/font-bold.svg"),"",box),
+            italic=new QPushButton(QIcon(":/images/font-italic.svg"),"",box),
+            underline=new QPushButton(QIcon(":/images/font-underline.svg"),"",box);
+
+    layout->addWidget(bold),layout->addWidget(italic),layout->addWidget(underline);
+    return box;
+}
+bool Editor::eventFilter(QObject *obj, QEvent *e)
+{
+    if(e->type()==QEvent::MouseMove)qDebug()<<e;
+    if(e->type()==QEvent::MouseButtonPress&&obj->objectName()=="textEditor")
+    {
+        qDebug()<<"filtering event"<<e<<endl;
+        QMouseEvent *mEvent=static_cast<QMouseEvent*>(e);
+        if(this->childAt(mEvent->pos())->objectName()=="toolBarBox")
+        {
+            qDebug()<<"got it!"<<mEvent->pos();
+        }
+        toolBar->setAttribute(Qt::WA_TransparentForMouseEvents,false);
+        bool b=QWidget::event(e);
+        toolBar->setAttribute(Qt::WA_TransparentForMouseEvents,true);
+        return b;
+    }
+    else return QWidget::eventFilter(obj,e);
+}
+TransparentWidget::TransparentWidget(QWidget* p):QWidget(p){}
+
+/*void TransparentWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    transMouseEvents(event);
+}
+
+void TransparentWidget::mousePressEvent(QMouseEvent *event)
+{
+    transMouseEvents(event);
+}
+
+void TransparentWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    transMouseEvents(event);
+}
+
+void TransparentWidget::transMouseEvents(QMouseEvent *event)
+{
+    if (this->parentWidget()) {
+    this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    QPoint pt = this->mapTo(this->parentWidget(), event->pos());
+    QWidget *wid = this->parentWidget()->childAt(pt);
+    if (wid) {
+        pt = wid->mapFrom(this->parentWidget(), pt);
+        QMouseEvent *mEvent = new QMouseEvent(event->type(), pt, event->button(), event->buttons(), event->modifiers());
+                qDebug()<<event<<mEvent<<wid;
+        if(wid->objectName()!="textEditor")wid->setAttribute(Qt::WA_TransparentForMouseEvents,true);
+        else
+        {
+            qDebug()<<wid->testAttribute(Qt::WA_Disabled)<<wid->testAttribute(Qt::WA_UnderMouse)<<wid->isActiveWindow()<<wid->children();
+            wid->setAttribute(Qt::WA_Disabled,false);
+            wid->setAttribute(Qt::WA_ShowWithoutActivating);
+        }
+        QApplication::postEvent(wid, mEvent);
+    }
+    this->setAttribute(Qt::WA_TransparentForMouseEvents, false);
+    }
+}
+*/

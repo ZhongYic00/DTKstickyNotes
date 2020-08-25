@@ -1,0 +1,32 @@
+#include "editor.h"
+
+Editor::Editor(QWidget *parent):QWidget(parent)
+{
+    textEditor=new DTextEdit(this);
+    textEditor->setObjectName("textEditor");
+
+    toolBar=initToolBar();
+
+    QStackedLayout *layout=new QStackedLayout(this);
+    layout->setStackingMode(QStackedLayout::StackAll);
+    layout->addWidget(toolBar);
+    layout->addWidget(textEditor);
+    setLayout(layout);
+}
+QWidget* Editor::initToolBar()
+{
+    DHBoxWidget *bar=new DHBoxWidget(this);
+    bar->setObjectName("toolBarBox");
+//    bar->setWindowFlag(Qt::WindowStaysOnTopHint);
+//    bar->setSizePolicy(QSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum));
+    auto bold=new QPushButton(QIcon(":/images/font-bold.svg"),"",bar),
+            italic=new QPushButton(QIcon(":/images/font-italic.svg"),"",bar),
+            underline=new QPushButton(QIcon(":/images/font-underline.svg"),"",bar);
+    bar->addWidget(bold);
+    bar->addWidget(italic);
+    bar->addWidget(underline);
+    qDebug()<<bar->sizeHint();
+    qDebug()<<size();
+    bar->setGeometry(size().width()/2,size().height(),bar->sizeHint().width(),bar->sizeHint().height());
+    return bar;
+}

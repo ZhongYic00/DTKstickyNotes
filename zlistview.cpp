@@ -7,161 +7,138 @@
 #include <QDebug>
 
 DGUI_USE_NAMESPACE
-ZListView::ZListView(DSimpleListView *parent):DSimpleListView(parent)
+ZListView::ZListView(QWidget *parent):QListView(parent)
 {
-    setFrame(true);
-    setClipRadius(8);
-    setFrame(true, QColor("#FF0000"), 0.5);
-    setRowHeight(80);
-    DGuiApplicationHelper *guiAppHelp = DGuiApplicationHelper::instance();
-    borderColor=guiAppHelp->systemTheme()->activeColor();
-    scrollbarColor="#"+QString::number(guiAppHelp->systemTheme()->shadow().rgb(),16);
-    setLayout(initAddLayer());
-
-    connect(this,&ZListView::rightClickItems,this,&ZListView::popupMenu);
-    auto lst=new QList<SortAlgorithm>;
-    lst->append(&ZListItem::sortByDateTime);
-    setColumnSortingAlgorithms(lst,0,false);
-    changeSortingStatus(0,false);
+//    setMouseTracking(true);
+    setDragEnabled(false);
+    setBatchSize(100);
+    setLayoutMode(QListView::Batched);
+    setFlow(QListView::TopToBottom);
+    setWrapping(false);
+    setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    setSelectionMode(QAbstractItemView::ExtendedSelection);
+    setUniformItemSizes(true);
+//	ItemDelegate itemDelegate(this);
+    setItemDelegate(new ItemDelegate(this));
+    setSpacing(2);
 }
-QWidget* ZListView::initAddButton()
+QList<ZNote> ZListView::selection()const
 {
-    auto *layer=new TransparentWidget(this);
-    layer->setObjectName("toolBarLayer");
-
-    QVBoxLayout *layout=new QVBoxLayout(layer);
-    layer->setLayout(layout);
-    layout->addStretch();
-
-    QHBoxLayout *bar=new QHBoxLayout(layer);
-    layout->addLayout(bar);
-    layout->addSpacing(10);
-
-    QIcon ico(":/images/add-btn");
-    auto btn=new DPushButton(ico,"",this);
-    btn->setObjectName("listAddButton");
-    btn->setIconSize(QSize(50,50));
-    btn->resize(50,50);
-    btn->setStyleSheet(
-                QString(
-                    "#listAddButton{"
-                    "border-radius:25;"
-                    "background-color:%1;"
-                    "margin:10;"
-                    "}"
-                    "#listAddButton:hover{"
-                    "border-radius:25;"
-                    "background-color:%2;"
-                    "margin:10;"
-                    "}"
-                    "#listAddButton:pressed{"
-                    "border-radius:25;"
-                    "background-color:%3;"
-                    "margin:10;"
-                    "}").arg(borderColor.name(QColor::HexRgb),borderColor.darker(110).name(QColor::HexRgb),borderColor.darker(150).name(QColor::HexRgb)));
-
-    QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(btn);
-    effect->setOffset(0,0);
-    effect->setColor(QColor(0,0,0,150));
-    effect->setBlurRadius(10);
-    btn->setGraphicsEffect(effect);
-
-    connect(btn,&DPushButton::clicked,this,&ZListView::addButtonClicked);
-
-    bar->addStretch();
-    bar->addWidget(btn);
-    return layer;
+    auto indexes=selectedIndexes();
+    QList<ZNote> rt;
+    for(auto i:indexes)
+        rt.push_back(i.data(Qt::UserRole).value<ZNote>());
+    return rt;
 }
-QLayout* ZListView::initAddLayer()
+int ZListModel::rowCount(const QModelIndex &parent) const
 {
-    QStackedLayout *layout=new QStackedLayout(this);
-    layout->setStackingMode(QStackedLayout::StackAll);
-    layout->addWidget(initAddButton());
-    return layout;
+    return static_cast<int>(items.size());
 }
-void ZListView::addButtonOnClick()
+QVariant ZListModel::data(const QModelIndex &index, int role) const
 {
-    emit addButtonClicked();
+//    qDebug()<<"call data"<<index.row()<<"role"<<role;
+    if(!index.isValid())return QVariant();
+    if(role==Qt::UserRole)
+    {
+        auto rt=items.getKth(index.row()+1);
+        return QVariant::fromValue(rt);
+    }
+    return QVariant();
 }
-void ZListView::popupMenu(QPoint pos, QList<DSimpleListItem*> items)
+bool ZListModel::insertRows(int row, int count, const QModelIndex &parent)
 {
-    QMenu *menu=new QMenu();
-    QAction *removeAction=new QAction(QIcon(":/images/trash-empty"),tr("删除"),menu);
-    connect(removeAction,&QAction::triggered,[&items,this](){emit removeItemsTriggered(items);});
-    menu->addAction(removeAction);
-    menu->exec(pos);
+    beginInsertRows(parent,row,row+count);
+
+    endInsertRows();
 }
-void ZListView::refresh()
+bool ZListModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-//    qDebug()<<"call ZListView::refresh()";
-    auto tmp=itemsAll;
-//    refreshItems(tmp);
+    if(!index.isValid())return false;
+    auto itemData=index.data(Qt::UserRole).value<ZNote>();
+    items.erase(itemData);
+    items.insert(value.value<ZNote>());
+    emit dataChanged(index,index,QVector<int>({Qt::UserRole}));
+    return true;
 }
-void ZListView::addItems(QList<DSimpleListItem *> items)
+void ZListModel::appendRow(const ZNote &value)
 {
-    itemsAll.append(items);
-    DSimpleListView::addItems(items);
+//    qDebug()<<"appendRow()"<<value.getOverview();
+    emit layoutAboutToBeChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
+//    beginInsertRows(QModelIndex(),0,rowCount()+1);
+//    qDebug()<<0<<rowCount()+1;
+    items.insert(value);
+//   changePersistentIndexList();
+//    endInsertRows();
+    emit layoutChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
 }
-void ZListView::clearItems()
+void ZListModel::removeRow(const ZNote &value)
 {
-//    qDebug()<<"call ZListView::clearItems";
-    DSimpleListView::clearItems();
+    emit layoutAboutToBeChanged();
+//    beginInsertRows(parent);
+    items.erase(value);
+//    changePersistentIndexList();
+//    endInsertRows();
+    emit layoutChanged();
+}
+QModelIndex ZListModel::latestIndex() const
+{
+//    qDebug()<<"call latestIndex"<<rowCount()-1;
+    return index(0);
+}
+ QList<ZNote> ZListModel::exportAll() const
+{
+     qDebug()<<"call ZListModel::exportAll()";
+    return QList<ZNote>::fromStdList(items.getAll());
 }
 
-ZListItem::ZListItem(ZNote *src,QColor c)
+ItemDelegate::ItemDelegate(QWidget *parent):QStyledItemDelegate(parent){}
+void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    note=src;
-    color=c;
-    updateText();
-}
-bool ZListItem::sameAs(DSimpleListItem *item)
-{
-//    qDebug()<<"call ZListItem::sameAs("<<item<<")this="<<this->note;
-    return note==(static_cast<ZListItem*>(item))->note;
-}
-void ZListItem::drawBackground(QRect rect,QPainter *painter,int index,bool isSelect,bool isHover)
-{
-    QPainterPath path;
+//    qDebug()<<"draw item";
+    if(!index.isValid())return ;
+    painter->save();
+    painter->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+
+    QRect rect(option.rect);
     rect.adjust(5,5,-5,-5);
+    QPainterPath path;
     path.addRoundRect(QRectF(rect),30);
     painter->setOpacity(1);
-    if(!isSelect&&!isHover)painter->fillPath(path,Qt::white);
-    else if(isSelect)
+    if(option.state.testFlag(QStyle::State_Selected))
+        painter->fillPath(path,QColor(Qt::white).darker(110));
+    else if(option.state.testFlag(QStyle::State_MouseOver))
+        painter->fillPath(path,QColor(Qt::white).darker(101));
+    else painter->fillPath(path,Qt::white);
+
+    if(option.state.testFlag(QStyle::State_Selected))
     {
-        painter->fillPath(path,QBrush(QColor(255,247,205)));
-        painter->setPen(QPen(color,2));
-        painter->drawPath(path);
+        QRect borderRect(rect);
+        borderRect.adjust(-3,-3,3,3);
+        QPainterPath borderPath;
+        borderPath.addRoundRect(QRectF(borderRect),33);
+        painter->setPen(QPen(DGuiApplicationHelper::instance()->systemTheme()->activeColor(),2));
+        painter->drawPath(borderPath);
     }
-    else painter->fillPath(path,QColor(255,254,237));
-}
-void ZListItem::drawForeground(QRect rect, QPainter *painter, int column, int index, bool isSelect, bool isHover)
-{
-    QPainterPath path;
+
+    auto data=index.data(Qt::UserRole).value<ZNote>();
     rect.adjust(5,5,-5,-5);
-    path.addRect(QRectF(rect));
-    painter->setOpacity(1);
-    painter->setPen(Qt::black);
-    int padding=10;
-    QFontMetrics fm(painter->font());
-    QString elideText=fm.elidedText(text,Qt::ElideRight,600);
-    painter->drawText(QRect(rect.x() + padding, rect.y(), rect.width() - padding * 2, rect.height()), Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap, elideText);
+    QRect mainRect(rect),infoRect(rect);
+    mainRect.adjust(0,0,0,-20);
+    infoRect.adjust(0,40,0,0);
+    painter->setPen(QPen(Qt::black,1));
+    painter->drawText(QRectF(mainRect),data.getOverview());
+    auto font=painter->font();
+    font.setItalic(true);
+    font.setPointSize(8);
+    painter->setFont(font);
+    painter->setPen(QPen(Qt::gray));
+    painter->drawText(QRectF(infoRect),QString("%1 %2   %3 %4").arg(QObject::tr("上次修改"),data.getUpdateTime(),QObject::tr("创建于"),data.getCreateTime()));
+//    qDebug()<<data.lastModified()<<rect<<mainRect<<infoRect;
+//    qDebug()<<"drawText"<<index.data(Qt::UserRole).value<ZNote>().getOverview();
+
+    painter->restore();
 }
-ZNote* ZListItem::data() const
+QSize ItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    return note;
-}
-inline void ZListItem::updateText()
-{
-    text=note->getOverview();
-}
-QDateTime ZListItem::lastModified() const
-{
-//    qDebug()<<"call ZListItem::lastModified()"<<note<<note->printObject();
-    return note->lastModified();
-}
-bool ZListItem::sortByDateTime(const DSimpleListItem *a, const DSimpleListItem *b, bool descadingSort)
-{
-//    qDebug()<<"call sortByDateTime()"<<a<<' '<<b<<endl;
-    bool rt=static_cast<const ZListItem*>(a)->lastModified()<static_cast<const ZListItem*>(b)->lastModified();
-    return descadingSort?rt:!rt;
+    return QSize(290,80);
 }

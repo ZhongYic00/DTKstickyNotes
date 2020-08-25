@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include <DMainWindow>
-#include <DListView>
 #include <DTitlebar>
 #include <DSearchEdit>
 #include <DTabBar>
@@ -11,7 +10,7 @@
 
 #include "backend.h"
 #include "editor.h"
-#include "zlistview.h"
+#include "zlist.h"
 
 DWIDGET_USE_NAMESPACE
 
@@ -28,16 +27,14 @@ private slots:
     void updateOverview(const QString &overview);
     void updateHtml(const QString &html);
     void createNewNote();
-    void removeNotes(QList<DSimpleListItem*> items);
 private:
     QHBoxLayout *mainLayout;
-    ZListView *notesListView;
+    ZList *notesListView;
     Editor *noteEditView;
     ZBackend *backend;
-    ZListItem *curNote;
     bool modified;
 
-    void display(DSimpleListItem *item);
+    void display(const QModelIndex &item);
     void reset();
     void initNotesListView();
 };

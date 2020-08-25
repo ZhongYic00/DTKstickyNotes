@@ -80,6 +80,18 @@ QWidget* Editor::initToolButtons(QWidget *parent)
     connect(code,&QPushButton::clicked,textEditor,&ZTextEdit::pInsCode);
     connect(splitline,&QPushButton::clicked,textEditor,&ZTextEdit::pSplitline);
 
+    auto newAction=[this](QKeySequence shortcut,bool b=true){
+        auto rt=new QAction;
+        rt->setCheckable(b);
+        rt->setShortcut(shortcut);
+        this->addAction(rt);
+        return rt;
+    };
+
+    connect(newAction(QKeySequence::Bold),&QAction::toggled,textEditor,&ZTextEdit::fBold);
+    connect(newAction(QKeySequence::Underline),&QAction::toggled,textEditor,&ZTextEdit::fUnderline);
+    connect(newAction(QKeySequence::Italic),&QAction::toggled,textEditor,&ZTextEdit::fItalic);
+
     layout->addWidget(bold),layout->addWidget(italic),layout->addWidget(underline),layout->addWidget(linethrough),layout->addWidget(splitline),layout->addWidget(image),layout->addWidget(url),layout->addWidget(list),layout->addWidget(olist),layout->addWidget(code);
     return box;
 }
@@ -87,13 +99,13 @@ void Editor::display(const QString &html)
 {
     textEditor->setHtml(html);
     textEditor->setFocus();
-    textEditor->setEnabled(true);
+    this->setEnabled(true);
 }
 void Editor::reset()
 {
 //    qDebug()<<"call Editor::reset()"<<textEditor;
     textEditor->clear();
-    textEditor->setEnabled(false);
+    this->setEnabled(false);
 //    qDebug()<<"Editor::reset() return";
 }
 void Editor::sendContentChanged()

@@ -1,0 +1,49 @@
+#include "editor.h"
+
+Editor::Editor(QWidget *parent):QWidget(parent)
+{
+    textEditor=new DTextEdit(this);
+    textEditor->setObjectName("textEditor");
+
+    toolBar=initToolBar();
+
+    QStackedLayout *layout=new QStackedLayout(this);
+    layout->setStackingMode(QStackedLayout::StackAll);
+    layout->addWidget(toolBar);
+    layout->setAlignment(toolBar,Qt::AlignBottom);
+    layout->addWidget(textEditor);
+    setLayout(layout);
+}
+QWidget* Editor::initToolBar()
+{
+    QWidget *layer=new QWidget(this);
+    layer->setObjectName("toolBarLayer");
+    QVBoxLayout *layout=new QVBoxLayout(layer);
+    layer->setLayout(layout);
+    layout->addStretch();
+
+    QHBoxLayout *bar=new QHBoxLayout(layer);
+    layout->addLayout(bar);
+//    bar->setWindowFlag(Qt::WindowStaysOnTopHint);
+//    bar->setSizePolicy(QSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum));
+    bar->addStretch();
+    bar->addWidget(initToolButtons(layer));
+    bar->addStretch();
+
+//    qDebug()<<bar->sizeHint();
+    return layer;
+}
+QWidget* Editor::initToolButtons(QWidget *parent)
+{
+    QDockWidget *box=new QDockWidget(parent);
+    box->setObjectName("toolBarBox");
+    QHBoxLayout *layout=new QHBoxLayout(box);
+    box->setLayout(layout);
+
+    auto bold=new QPushButton(QIcon(":/images/font-bold.svg"),"",box),
+            italic=new QPushButton(QIcon(":/images/font-italic.svg"),"",box),
+            underline=new QPushButton(QIcon(":/images/font-underline.svg"),"",box);
+
+    layout->addWidget(bold),layout->addWidget(italic),layout->addWidget(underline);
+    return box;
+}

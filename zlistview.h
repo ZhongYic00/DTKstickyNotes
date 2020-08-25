@@ -1,52 +1,39 @@
 #ifndef ZLISTVIEW_H
 #define ZLISTVIEW_H
 
-#include <DSimpleListView>
-#include <QStackedLayout>
+#include <QListView>
+#include <QStyledItemDelegate>
 #include "znote.h"
+#include "fhqtreap.cpp"
 
-DWIDGET_USE_NAMESPACE
-
-class ZListView : public DSimpleListView
+class ZListModel:public QAbstractListModel
 {
-    Q_OBJECT
 public:
-    ZListView(DSimpleListView *parent=nullptr);
-    QColor borderColor;
-    QColor themeColor;
-    void refresh();
-    void addItems(QList<DSimpleListItem*> items);
-    void clearItems();
-public slots:
-    void addButtonOnClick();
-    void popupMenu(QPoint pos, QList<DSimpleListItem*> items);
-signals:
-    void addButtonClicked();
-    void removeItemsTriggered(QList<DSimpleListItem*>);
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex());
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
+    void appendRow(const ZNote &value);
+    void removeRow(const ZNote &value);
+    QModelIndex latestIndex() const;
+    QList<ZNote> exportAll() const;
 private:
-    QWidget* initAddButton();
-    QLayout* initAddLayer();
-    QList<DSimpleListItem*> itemsAll;
+    Treap<ZNote> items;
 };
 
-class ZListItem:public DSimpleListItem
+class ZListView: public QListView
 {
-    Q_OBJECT
 public:
-    ZListItem(ZNote *src,QColor c);
-    bool sameAs(DSimpleListItem *item);
-    void drawBackground(QRect rect,QPainter *painter,int index,bool isSelect,bool isHover);
-    void drawForeground(QRect rect,QPainter *painter,int column,int index,bool isSelect,bool isHover);
-    ZNote* data()const;
-    void updateText();
-    QDateTime lastModified()const;
-    static bool sortByDateTime(const DSimpleListItem *a, const DSimpleListItem *b, bool descadingSort);
-protected:
-    QString text;
-    ZNote *note;
-    QColor color;
-private:
-    int index;
+    ZListView(QWidget *parent=nullptr);
+    QList<ZNote> selection() const;
 };
 
 #endif // ZLISTVIEW_H
+
+class ItemDelegate: public QStyledItemDelegate
+{
+public:
+    ItemDelegate(QWidget *parent=nullptr);
+    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const;
+};

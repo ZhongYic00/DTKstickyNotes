@@ -1,8 +1,13 @@
-#ListView{
+#List{
 border-right: 2 solid #DDDDDD;
 min-width:300;
 max-width:300;
-background:#FFFFFF;
+background:#F0F0F0;
+}
+#listview{
+min-width:300;
+max-width:300;
+background-color:transparent;
 }
 QMainWindow{
 padding:0;
