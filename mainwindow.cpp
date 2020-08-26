@@ -1,5 +1,7 @@
 #include "mainwindow.h"
+#include <DThemeManager>
 
+DTK_USE_NAMESPACE
 
 MainWindow::MainWindow(ZBackend *back,QWidget *parent) :
     DMainWindow(parent),modified(false)
@@ -13,7 +15,7 @@ MainWindow::MainWindow(ZBackend *back,QWidget *parent) :
     noteEditView->setObjectName("Editor");
 
     connect(notesListView,&ZList::currentChanged,[this](const QModelIndex &item){noteEditView->blockSignals(true);noteEditView->display(item.data(Qt::UserRole).value<ZNote>().getHtml());noteEditView->blockSignals(false);});
-    connect(noteEditView,&Editor::contentChanged,[this](const pss val){notesListView->setCurrentOverview(val.first);notesListView->setCurrentHtml(val.second);qDebug()<<"contentChanged";});
+    connect(noteEditView,&Editor::contentChanged,[this](const pss val){notesListView->setCurrentOverview(val.first);notesListView->setCurrentHtml(val.second);});
     connect(noteEditView,&Editor::contentChanged,[this](){modified=true;});
     connect(notesListView,&ZList::addButtonClicked,this,&MainWindow::createNewNote);
     connect(notesListView,&ZList::listEmptied,[this](){reset();});
@@ -22,6 +24,7 @@ MainWindow::MainWindow(ZBackend *back,QWidget *parent) :
 
     setMinimumSize(800,800);
 
+    DThemeManager::registerWidget(titlebar());
     titlebar()->setTitle("深度便笺");
     titlebar()->setIcon(QIcon(":/images/logo256"));
     titlebar()->setFixedHeight(40);

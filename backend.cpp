@@ -30,6 +30,7 @@ inline QString ZBackend::readWholeFile(const QString &filename) const
 {
     QFile input(filename);
     input.open(QFile::ReadOnly|QFile::Text);
+    if(!input.isOpen())return QString();
     QTextStream inputStream(&input);
     QString rt=inputStream.readAll();
 //    qDebug()<<"import file content:\n"<<rt;

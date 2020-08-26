@@ -1,15 +1,18 @@
 #include "zlistview.h"
 #include "editor.h"
 #include <DGuiApplicationHelper>
+#include <DThemeManager>
 #include <DPlatformTheme>
 #include <DPushButton>
 #include <QtWidgets>
 #include <QDebug>
 
 DGUI_USE_NAMESPACE
+DTK_USE_NAMESPACE
 ZListView::ZListView(QWidget *parent):QListView(parent)
 {
 //    setMouseTracking(true);
+    DThemeManager::registerWidget(this);
     setDragEnabled(false);
     setBatchSize(100);
     setLayoutMode(QListView::Batched);
@@ -33,6 +36,7 @@ QList<ZNote> ZListView::selection()const
 }
 void ZListView::clearSelectionExt()
 {
+    if(!selectionModel()->hasSelection()) return ;
     int front=selectedIndexes().front().row();
     clearSelection();
     if(model()->rowCount()>front)
@@ -124,8 +128,12 @@ QModelIndex ZListModel::latestIndex() const
 }
  QList<ZNote> ZListModel::exportAll() const
 {
-     qDebug()<<"call ZListModel::exportAll()";
+//     qDebug()<<"call ZListModel::exportAll()";
     return QList<ZNote>::fromStdList(items.getAll());
+}
+void ZListModel::dbg()
+{
+    qDebug()<<"max depth"<<items.depth();
 }
 
 ItemDelegate::ItemDelegate(QWidget *parent):QStyledItemDelegate(parent){}

@@ -79,6 +79,18 @@ public:
     {
         return root?root->goThrough():std::list<T>();
     }
+    int depth()
+    {
+        return root?depth(root):0;
+    }
+    int depth(tree t,int d=0)
+    {
+        d++;
+        int rt=d;
+        if(t->ch[0])rt=std::max(rt,depth(t->ch[0],d));
+        if(t->ch[1])rt=std::max(rt,depth(t->ch[1],d));
+        return rt;
+    }
 private:
     int seed=10007;
     tree root;

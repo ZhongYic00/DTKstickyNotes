@@ -133,7 +133,9 @@ void ZTextEdit::pSplitline()
 void ZTextEdit::pInsImage()
 {
     auto cursor=textCursor();
-    cursor.insertImage(QImage(QFileDialog::getOpenFileName(this,"","","Images(*.jpg *.png *.svg *.tif *.bmp)")));
+    auto imageName=QFileDialog::getOpenFileName(this,"","","Images(*.jpg *.png *.svg *.tif *.bmp)");
+//    cursor.insertImage(QImage(imageName));
+    cursor.insertHtml("<img src=\""+imageName+"\"></img>");
 }
 void ZTextEdit::pInsUrl(bool b)
 {

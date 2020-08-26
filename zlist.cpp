@@ -121,12 +121,12 @@ void ZList::setCurrentHtml(const QString &html)
     auto curIndex=listview.currentIndex();
     model.setData(curIndex,QVariant::fromValue(html),ZListModel::Html);
 }
-void ZList::commitChange(bool trace)
+void ZList::commitChange(bool trace)    //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit
 {
+    haveChange=false;
     auto curIndex=model.index(curRow);
     model.setData(curIndex,QVariant(),ZListModel::UpdateTime);
     if(trace)listview.setCurrentIndex(model.index(0));
-    haveChange=false;
 }
 void ZList::setCur(const QModelIndex &idx)
 {

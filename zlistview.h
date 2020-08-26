@@ -18,6 +18,7 @@ public:
     void removeRow(const ZNote &value);
     QModelIndex latestIndex() const;
     QList<ZNote> exportAll() const;
+    void dbg();
 private:
     Treap<ZNote> items;
 };
