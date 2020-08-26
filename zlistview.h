@@ -9,6 +9,7 @@
 class ZListModel:public QAbstractListModel
 {
 public:
+    enum roles{Overview=Qt::UserRole+1,Html=Qt::UserRole+2,UpdateTime=Qt::UserRole+3};
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex());
@@ -23,9 +24,15 @@ private:
 
 class ZListView: public QListView
 {
+    Q_OBJECT
 public:
     ZListView(QWidget *parent=nullptr);
     QList<ZNote> selection() const;
+    void clearSelectionExt();
+    void setCurrentIndex(const QModelIndex &cur);
+signals:
+    void activeChange(const QModelIndex &cur);
+    void listEmptied();
 };
 
 #endif // ZLISTVIEW_H

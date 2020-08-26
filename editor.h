@@ -8,6 +8,7 @@
 #include "ztextedit.h"
 
 DWIDGET_USE_NAMESPACE
+typedef std::pair<QString,QString> pss;
 class Editor:public QWidget
 {
     Q_OBJECT
@@ -17,10 +18,8 @@ public:
     void reset();
     QString getContentRich() const;
 signals:
-    void contentChanged(const QString);
+    void contentChanged(const pss);
     void contentSaved(const QString);
-public slots:
-    void sendContentChanged();
 protected:
 //    void keyPressEvent(QKeyEvent*);
 //    void keyReleaseEvent(QKeyEvent*);

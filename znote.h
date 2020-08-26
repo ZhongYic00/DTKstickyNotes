@@ -17,6 +17,7 @@ public:
     QString getOverview()const;
     void setHtml(const QString &_html);
     void setOverview(const QString &_overview);
+    void commitChange();
     QJsonObject jsonObject()const;
     void print() const;
     QString getUpdateTime() const;

@@ -66,6 +66,11 @@ public:
     {
         return getKth(root,k);
     }
+    template<typename F>
+    void modifyKth(int k, F function)
+    {
+        modifyKth(root,k,function);
+    }
     int size() const
     {
         return root?root->tSize:0;
@@ -119,6 +124,18 @@ private:
             return *(t->key);
         else
             return getKth(t->ch[0],k);
+    }
+    template<typename F>
+    void modifyKth(tree t,int k,F func)
+    {
+        if(!t) return ;
+        int lsize=1+(t->ch[0]?t->ch[0]->tSize:0);
+        if(lsize<k)
+            modifyKth(t->ch[1],k-lsize,func);
+        else if(lsize==k)
+            func(t->key.get());
+        else
+            modifyKth(t->ch[0],k,func);
     }
     tree merge(tree l,tree r)
     {

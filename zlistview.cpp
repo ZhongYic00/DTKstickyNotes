@@ -18,9 +18,10 @@ ZListView::ZListView(QWidget *parent):QListView(parent)
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setUniformItemSizes(true);
-//	ItemDelegate itemDelegate(this);
     setItemDelegate(new ItemDelegate(this));
     setSpacing(2);
+
+//    connect(this,&ZListView::currentChanged,[this](const QModelIndex &cur){emit activeChange(cur);qDebug()<<"receive curchanged";});
 }
 QList<ZNote> ZListView::selection()const
 {
@@ -30,6 +31,23 @@ QList<ZNote> ZListView::selection()const
         rt.push_back(i.data(Qt::UserRole).value<ZNote>());
     return rt;
 }
+void ZListView::clearSelectionExt()
+{
+    int front=selectedIndexes().front().row();
+    clearSelection();
+    if(model()->rowCount()>front)
+        setCurrentIndex(model()->index(front,0));
+    else if(model()->rowCount()!=0)setCurrentIndex(model()->index(front-1,0));
+    else emit listEmptied();
+}
+void ZListView::setCurrentIndex(const QModelIndex &cur)
+{
+//    clearSelection();
+    selectionModel()->setCurrentIndex(cur,QItemSelectionModel::SelectCurrent);
+    emit activeChange(cur);
+//    QListView::setCurrentIndex(cur);
+}
+
 int ZListModel::rowCount(const QModelIndex &parent) const
 {
     return static_cast<int>(items.size());
@@ -43,6 +61,11 @@ QVariant ZListModel::data(const QModelIndex &index, int role) const
         auto rt=items.getKth(index.row()+1);
         return QVariant::fromValue(rt);
     }
+    else if(role==UpdateTime)
+    {
+        auto rt=items.getKth(index.row()+1);
+        return QVariant::fromValue(rt.lastModified());
+    }
     return QVariant();
 }
 bool ZListModel::insertRows(int row, int count, const QModelIndex &parent)
@@ -54,9 +77,23 @@ bool ZListModel::insertRows(int row, int count, const QModelIndex &parent)
 bool ZListModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if(!index.isValid())return false;
-    auto itemData=index.data(Qt::UserRole).value<ZNote>();
-    items.erase(itemData);
-    items.insert(value.value<ZNote>());
+    if(role==Overview || role==Html)
+    {
+//        qDebug()<<"updating html/overview";
+        auto str=value.value<QString>();
+        items.modifyKth(index.row()+1,[str,role](ZNote *key){
+            if(role==Overview) key->setOverview(str);
+            else if(role==Html) key->setHtml(str);
+            else qDebug()<<"ZListModel::setData error";
+        });
+    }
+    else if(role==UpdateTime)
+    {
+        auto itemData=index.data(Qt::UserRole).value<ZNote>();
+        items.erase(itemData);
+        itemData.commitChange();
+        items.insert(itemData);
+    }
     emit dataChanged(index,index,QVector<int>({Qt::UserRole}));
     return true;
 }

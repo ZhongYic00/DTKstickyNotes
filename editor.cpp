@@ -4,7 +4,7 @@ Editor::Editor(QWidget *parent):QWidget(parent)
 {
     textEditor=new ZTextEdit(this);
     textEditor->setObjectName("textEditor");
-    connect(textEditor,&ZTextEdit::textChanged,this,&Editor::sendContentChanged);
+    connect(textEditor,&ZTextEdit::textChanged,[this](){emit contentChanged(std::make_pair(textEditor->toPlainText().left(100),textEditor->toHtml()));});
 
     toolBar=initToolBar();
 
@@ -104,13 +104,11 @@ void Editor::display(const QString &html)
 void Editor::reset()
 {
 //    qDebug()<<"call Editor::reset()"<<textEditor;
+    textEditor->blockSignals(true);
     textEditor->clear();
     this->setEnabled(false);
+    textEditor->blockSignals(false);
 //    qDebug()<<"Editor::reset() return";
-}
-void Editor::sendContentChanged()
-{
-    emit contentChanged(textEditor->toPlainText().left(100));
 }
 QString Editor::getContentRich() const
 {

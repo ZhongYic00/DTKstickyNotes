@@ -5,7 +5,7 @@
 #include <DPlatformTheme>
 
 DGUI_USE_NAMESPACE
-ZList::ZList(QWidget *parent):QWidget(parent)
+ZList::ZList(QWidget *parent):QWidget(parent),curRow(-1),haveChange(false)
 {
     listview.setModel(&model);
     listview.setObjectName("listview");
@@ -17,10 +17,10 @@ ZList::ZList(QWidget *parent):QWidget(parent)
     listview.setContextMenuPolicy(Qt::CustomContextMenu);
 //    connect(this,&ZList::rightClickItems,this,&ZList::popupMenu);
     connect(&listview,&QListView::customContextMenuRequested,[this](const QPoint &pos){
-        qDebug()<<"menu requested";
         popupMenu(mapToGlobal(pos),listview.selection());
     });
     connect(&listview,&QListView::clicked,[this](const QModelIndex &cur){emit currentChanged(cur);});
+    connect(&listview,&ZListView::activeChange,this,&ZList::currentChanged);
 }
 QWidget* ZList::initAddButton()
 {
@@ -70,6 +70,8 @@ QWidget* ZList::initAddButton()
         listview.setCurrentIndex(i);
         emit currentChanged(i);
     });
+    connect(this,&ZList::currentChanged,this,&ZList::setCur);
+    connect(&listview,&ZListView::listEmptied,[this](){emit listEmptied();});
 
     bar->addStretch();
     bar->addWidget(btn);
@@ -109,27 +111,34 @@ QList<ZNote> ZList::getDataList() const
 }
 void ZList::setCurrentOverview(const QString &overview)
 {
+    haveChange=true;
     auto curIndex=listview.currentIndex();
-    ZNote cur=curIndex.data(Qt::UserRole).value<ZNote>();
-    if(cur.getOverview()==overview)return ;
-    cur.setOverview(overview);
-    model.setData(curIndex,QVariant::fromValue(cur),Qt::UserRole);
+    model.setData(curIndex,QVariant::fromValue(overview),ZListModel::Overview);
 }
 void ZList::setCurrentHtml(const QString &html)
 {
+    haveChange=true;
     auto curIndex=listview.currentIndex();
-    ZNote cur=curIndex.data(Qt::UserRole).value<ZNote>();
-    cur.setHtml(html);
-    model.setData(curIndex,QVariant::fromValue(cur),Qt::UserRole);
-    listview.clearSelection();
-    listview.setCurrentIndex(model.index(0));
+    model.setData(curIndex,QVariant::fromValue(html),ZListModel::Html);
+}
+void ZList::commitChange(bool trace)
+{
+    auto curIndex=model.index(curRow);
+    model.setData(curIndex,QVariant(),ZListModel::UpdateTime);
+    if(trace)listview.setCurrentIndex(model.index(0));
+    haveChange=false;
+}
+void ZList::setCur(const QModelIndex &idx)
+{
+    if(curRow!=-1 && haveChange)commitChange(false);
+    curRow=idx.row();
+    haveChange=false;
 }
 void ZList::popupMenu(const QPoint &pos, const QList<ZNote> &selection)
 {
     QMenu *menu=new QMenu();
     QAction *removeAction=new QAction(QIcon(":/images/trash-empty"),tr("删除"),menu);
-//    connect(removeAction,&QAction::triggered,[&items,this](){emit removeItemsTriggered(items);});
-    connect(removeAction,&QAction::triggered,[&selection,this](){removeItems(selection);});
+    connect(removeAction,&QAction::triggered,[&selection,this](){removeItems(selection);listview.clearSelectionExt();});
     menu->addAction(removeAction);
     menu->exec(pos);
 }

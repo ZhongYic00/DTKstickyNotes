@@ -40,11 +40,14 @@ QString ZNote::getOverview() const
 void ZNote::setHtml(const QString &_html)
 {
     html=_html;
-    updateTime=QDateTime::currentDateTime();
 }
 void ZNote::setOverview(const QString &_overview)
 {
     overview=_overview;
+}
+void ZNote::commitChange()
+{
+    updateTime=QDateTime::currentDateTime();
 }
 QJsonObject ZNote::jsonObject() const
 {

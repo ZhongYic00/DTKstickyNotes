@@ -12,10 +12,11 @@ MainWindow::MainWindow(ZBackend *back,QWidget *parent) :
     noteEditView=new Editor(this);
     noteEditView->setObjectName("Editor");
 
-    connect(notesListView,&ZList::currentChanged,this,&MainWindow::display);
-    connect(noteEditView,&Editor::contentChanged,this,&MainWindow::updateOverview);
+    connect(notesListView,&ZList::currentChanged,[this](const QModelIndex &item){noteEditView->blockSignals(true);noteEditView->display(item.data(Qt::UserRole).value<ZNote>().getHtml());noteEditView->blockSignals(false);});
+    connect(noteEditView,&Editor::contentChanged,[this](const pss val){notesListView->setCurrentOverview(val.first);notesListView->setCurrentHtml(val.second);qDebug()<<"contentChanged";});
     connect(noteEditView,&Editor::contentChanged,[this](){modified=true;});
     connect(notesListView,&ZList::addButtonClicked,this,&MainWindow::createNewNote);
+    connect(notesListView,&ZList::listEmptied,[this](){reset();});
 //    connect(notesListView,&ZListView::removeItemsTriggered,this,&MainWindow::removeNotes);
     initNotesListView();
 
@@ -53,22 +54,10 @@ void MainWindow::initNotesListView()
 //如果没有创建过的note，自动新建
     reset();
 }
-void MainWindow::display(const QModelIndex &item)
-{
-    noteEditView->display(item.data(Qt::UserRole).value<ZNote>().getHtml());
-}
-void MainWindow::updateOverview(const QString &overview)
-{
-    notesListView->setCurrentOverview(overview);
-}
-void MainWindow::updateHtml(const QString &html)
-{
-    notesListView->setCurrentHtml(html);
-}
 void MainWindow::save()
 {
     if(!modified)return ;
-    updateHtml(noteEditView->getContentRich());
+    notesListView->commitChange();
     backend->save(notesListView->getDataList());
     modified=false;
 }

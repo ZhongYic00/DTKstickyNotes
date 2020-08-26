@@ -24,15 +24,13 @@ public:
 public slots:
     void save();
 private slots:
-    void updateOverview(const QString &overview);
-    void updateHtml(const QString &html);
     void createNewNote();
 private:
     QHBoxLayout *mainLayout;
     ZList *notesListView;
     Editor *noteEditView;
     ZBackend *backend;
-    bool modified;
+    bool modified;  //records changes to any item
 
     void display(const QModelIndex &item);
     void reset();
