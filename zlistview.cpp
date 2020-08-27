@@ -171,7 +171,7 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     mainRect.adjust(0,0,0,-20);
     infoRect.adjust(0,40,0,0);
     painter->setPen(QPen(Qt::black,1));
-    painter->drawText(QRectF(mainRect),data.getOverview());
+    painter->drawText(QRectF(mainRect),QFontMetrics(painter->font()).elidedText(data.getOverview(),Qt::ElideRight,500));
     auto font=painter->font();
     font.setItalic(true);
     font.setPointSize(8);
