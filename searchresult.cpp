@@ -39,7 +39,10 @@ void SearchResult::filter(const QString &str)
 {
     if(!model) return ;
     model->setFilterRole(ZListModel::Overview);
-    model->setFilterFixedString(str);
+    if(str.length())
+        model->setFilterFixedString(str);
+    else
+        model->setFilterFixedString("\127");
 }
 void SearchResult::setSrcModel(QAbstractListModel *m)
 {
