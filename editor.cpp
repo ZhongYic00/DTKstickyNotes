@@ -1,10 +1,11 @@
 #include "editor.h"
+#include "roundedwidget.h"
 
 Editor::Editor(QWidget *parent):QWidget(parent)
 {
     textEditor=new ZTextEdit(this);
     textEditor->setObjectName("textEditor");
-    connect(textEditor,&ZTextEdit::textChanged,[this](){emit contentChanged(std::make_pair(textEditor->toPlainText().left(100),textEditor->toHtml()));});
+    connect(textEditor,&ZTextEdit::textChanged,[this](){emit contentChanged(std::make_pair(textEditor->toPlainText(),textEditor->toHtml()));});
 
     toolBar=initToolBar();
 
@@ -27,7 +28,6 @@ QWidget* Editor::initToolBar()
 
     QHBoxLayout *bar=new QHBoxLayout(layer);
     layout->addLayout(bar);
-    layout->addSpacing(5);
 
     bar->addStretch();
     bar->addWidget(toolBox);
@@ -37,19 +37,16 @@ QWidget* Editor::initToolBar()
 }
 QWidget* Editor::initToolButtons(QWidget *parent)
 {
-    QWidget *box=new QWidget(parent);
+    auto *box=new RoundedWidget(parent);
     box->setObjectName("toolBarBox");
-    box->setAttribute(Qt::WA_TransparentForMouseEvents, false);
+//    box->setAutoFillBackground(true);
+    box->setRadius(15);
+    box->setShadow(10);
+//    box->setMargin(10);
     QHBoxLayout *layout=new QHBoxLayout(box);
     box->setLayout(layout);
 
-    layout->setMargin(15);
-
-    QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(box);
-    effect->setOffset(0,0);
-    effect->setColor(QColor(0,0,0,50));
-    effect->setBlurRadius(15);
-    box->setGraphicsEffect(effect);
+//    layout->setMargin(15);
 
     auto bold=new QPushButton(QIcon(":/images/font-bold"),"",box),
             italic=new QPushButton(QIcon(":/images/font-italic"),"",box),

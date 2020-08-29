@@ -135,7 +135,7 @@ void ZTextEdit::pInsImage()
     auto cursor=textCursor();
     auto imageName=QFileDialog::getOpenFileName(this,"","","Images(*.jpg *.png *.svg *.tif *.bmp)");
 //    cursor.insertImage(QImage(imageName));
-    cursor.insertHtml("<img src=\""+imageName+"\"></img>");
+    cursor.insertHtml("<img src=\""+imageName+"\" alt=\""+imageName+"\"/>");
 }
 void ZTextEdit::pInsUrl(bool b)
 {

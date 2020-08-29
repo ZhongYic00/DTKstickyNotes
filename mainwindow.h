@@ -11,6 +11,7 @@
 #include "backend.h"
 #include "editor.h"
 #include "zlist.h"
+#include "searchwidget.h"
 
 DWIDGET_USE_NAMESPACE
 
@@ -23,8 +24,6 @@ public:
     ~MainWindow();
 public slots:
     void save();
-private slots:
-    void createNewNote();
 private:
     QHBoxLayout *mainLayout;
     ZList *notesListView;

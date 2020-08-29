@@ -26,3 +26,9 @@ border:none;
 border-radius:15;
 margin:10;
 }
+#searchBox{
+}
+#searchResult{
+border:none;
+border-radius:30;
+}

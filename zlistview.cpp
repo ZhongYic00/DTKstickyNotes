@@ -12,7 +12,6 @@ DTK_USE_NAMESPACE
 ZListView::ZListView(QWidget *parent):QListView(parent)
 {
 //    setMouseTracking(true);
-    DThemeManager::registerWidget(this);
     setDragEnabled(false);
     setBatchSize(100);
     setLayoutMode(QListView::Batched);
@@ -23,8 +22,7 @@ ZListView::ZListView(QWidget *parent):QListView(parent)
     setUniformItemSizes(true);
     setItemDelegate(new ItemDelegate(this));
     setSpacing(2);
-
-//    connect(this,&ZListView::currentChanged,[this](const QModelIndex &cur){emit activeChange(cur);qDebug()<<"receive curchanged";});
+    viewport()->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
 }
 QList<ZNote> ZListView::selection()const
 {
@@ -51,6 +49,12 @@ void ZListView::setCurrentIndex(const QModelIndex &cur)
     emit activeChange(cur);
 //    QListView::setCurrentIndex(cur);
 }
+void ZListView::setNoBackground(bool b)
+{
+    if(!b)return ;
+    viewport()->setAutoFillBackground(false);
+    setFrameShape(QFrame::NoFrame);
+}
 
 int ZListModel::rowCount(const QModelIndex &parent) const
 {
@@ -60,15 +64,22 @@ QVariant ZListModel::data(const QModelIndex &index, int role) const
 {
 //    qDebug()<<"call data"<<index.row()<<"role"<<role;
     if(!index.isValid())return QVariant();
+    auto rt=items.getKth(index.row()+1);
     if(role==Qt::UserRole)
     {
-        auto rt=items.getKth(index.row()+1);
         return QVariant::fromValue(rt);
     }
     else if(role==UpdateTime)
     {
-        auto rt=items.getKth(index.row()+1);
         return QVariant::fromValue(rt.lastModified());
+    }
+    else if(role==Html)
+    {
+        return QVariant::fromValue(rt.getHtml());
+    }
+    else if(role==Overview)
+    {
+        return QVariant::fromValue(rt.getOverview());
     }
     return QVariant();
 }
@@ -103,10 +114,8 @@ bool ZListModel::setData(const QModelIndex &index, const QVariant &value, int ro
 }
 void ZListModel::appendRow(const ZNote &value)
 {
-//    qDebug()<<"appendRow()"<<value.getOverview();
     emit layoutAboutToBeChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
 //    beginInsertRows(QModelIndex(),0,rowCount()+1);
-//    qDebug()<<0<<rowCount()+1;
     items.insert(value);
 //   changePersistentIndexList();
 //    endInsertRows();
@@ -123,7 +132,6 @@ void ZListModel::removeRow(const ZNote &value)
 }
 QModelIndex ZListModel::latestIndex() const
 {
-//    qDebug()<<"call latestIndex"<<rowCount()-1;
     return index(0);
 }
  QList<ZNote> ZListModel::exportAll() const
@@ -139,7 +147,6 @@ void ZListModel::dbg()
 ItemDelegate::ItemDelegate(QWidget *parent):QStyledItemDelegate(parent){}
 void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-//    qDebug()<<"draw item";
     if(!index.isValid())return ;
     painter->save();
     painter->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
@@ -150,10 +157,10 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     path.addRoundRect(QRectF(rect),30);
     painter->setOpacity(1);
     if(option.state.testFlag(QStyle::State_Selected))
-        painter->fillPath(path,QColor(Qt::white).darker(110));
+        painter->fillPath(path,option.palette.dark());
     else if(option.state.testFlag(QStyle::State_MouseOver))
-        painter->fillPath(path,QColor(Qt::white).darker(101));
-    else painter->fillPath(path,Qt::white);
+        painter->fillPath(path,option.palette.midlight());
+    else painter->fillPath(path,option.palette.base());
 
     if(option.state.testFlag(QStyle::State_Selected))
     {
@@ -161,7 +168,7 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
         borderRect.adjust(-3,-3,3,3);
         QPainterPath borderPath;
         borderPath.addRoundRect(QRectF(borderRect),33);
-        painter->setPen(QPen(DGuiApplicationHelper::instance()->systemTheme()->activeColor(),2));
+        painter->setPen(QPen(option.palette.highlight(),2));
         painter->drawPath(borderPath);
     }
 
@@ -170,20 +177,18 @@ void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     QRect mainRect(rect),infoRect(rect);
     mainRect.adjust(0,0,0,-20);
     infoRect.adjust(0,40,0,0);
-    painter->setPen(QPen(Qt::black,1));
+    painter->setPen(QPen(option.palette.text(),1));
     painter->drawText(QRectF(mainRect),QFontMetrics(painter->font()).elidedText(data.getOverview(),Qt::ElideRight,500));
     auto font=painter->font();
     font.setItalic(true);
     font.setPointSize(8);
     painter->setFont(font);
-    painter->setPen(QPen(Qt::gray));
+    painter->setPen(QPen(Qt::gray,1));
     painter->drawText(QRectF(infoRect),QString("%1 %2   %3 %4").arg(QObject::tr("上次修改"),data.getUpdateTime(),QObject::tr("创建于"),data.getCreateTime()));
-//    qDebug()<<data.lastModified()<<rect<<mainRect<<infoRect;
-//    qDebug()<<"drawText"<<index.data(Qt::UserRole).value<ZNote>().getOverview();
 
     painter->restore();
 }
 QSize ItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    return QSize(290,80);
+    return QSize(295,80);
 }

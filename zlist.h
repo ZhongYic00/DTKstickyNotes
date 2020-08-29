@@ -16,8 +16,10 @@ public:
     QList<ZNote> getDataList() const;
     void setCurrentOverview(const QString &overview);
     void setCurrentHtml(const QString &html);
+    void setCurrentIndex(const QModelIndex &cur);
     void commitChange(bool trace=true);
     void popupMenu(const QPoint &pos, const QList<ZNote> &selection);
+    ZListModel* getModel();
 signals:
     void addButtonClicked();
     void currentChanged(const QModelIndex &cur);
@@ -25,8 +27,8 @@ signals:
 /*public slots:
     void popupMenu();*/
 private:
-    ZListView listview;
-    ZListModel model;
+    ZListView *listview;
+    ZListModel *model;
     QColor themeColor;
     int curRow;
     bool haveChange;

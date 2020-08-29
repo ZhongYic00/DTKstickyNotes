@@ -31,12 +31,11 @@ public:
     QList<ZNote> selection() const;
     void clearSelectionExt();
     void setCurrentIndex(const QModelIndex &cur);
+    void setNoBackground(bool b);
 signals:
     void activeChange(const QModelIndex &cur);
     void listEmptied();
 };
-
-#endif // ZLISTVIEW_H
 
 class ItemDelegate: public QStyledItemDelegate
 {
@@ -45,3 +44,5 @@ public:
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const;
 };
+
+#endif // ZLISTVIEW_H

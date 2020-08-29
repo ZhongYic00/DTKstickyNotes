@@ -9,10 +9,10 @@ int main(int argc, char *argv[])
     DApplication::loadDXcbPlugin();
     DApplication app(argc,argv);
 
-    QFile qss(":/stylesheets/mainwindow.qss");
+/*    QFile qss(":/stylesheets/mainwindow.qss");
     qss.open(QFile::ReadOnly|QFile::Text);
     app.setStyleSheet(qss.readAll());
-    qss.close();
+    qss.close();*/
 
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
     if(!app.setSingleInstance("DStickyNotes"))return 0;

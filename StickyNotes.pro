@@ -37,7 +37,10 @@ SOURCES += \
     zlistview.cpp \
     znote.cpp \
     zlist.cpp \
-    fhqtreap.cpp
+    fhqtreap.cpp \
+    searchresult.cpp \
+    searchwidget.cpp \
+    roundedwidget.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -47,7 +50,10 @@ HEADERS += \
     ztextedit.h \
     zlistview.h \
     znote.h \
-    zlist.h
+    zlist.h \
+    searchresult.h \
+    searchwidget.h \
+    roundedwidget.h
 
 FORMS +=
 
