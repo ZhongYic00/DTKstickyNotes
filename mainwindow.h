@@ -12,6 +12,7 @@
 #include "editor.h"
 #include "zlist.h"
 #include "searchwidget.h"
+#include "stickywidget.h"
 
 DWIDGET_USE_NAMESPACE
 

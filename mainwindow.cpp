@@ -55,6 +55,9 @@ MainWindow::MainWindow(ZBackend *back,QWidget *parent) :
     saveAction->setShortcut(QKeySequence::Save);
     connect(saveAction,&QAction::triggered,this,&MainWindow::save);
     addAction(saveAction);
+
+    auto tmp=new StickyWidget;
+    tmp->show();
 }
 void MainWindow::initNotesListView()
 {

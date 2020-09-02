@@ -1,5 +1,5 @@
 #include "editor.h"
-#include "roundedwidget.h"
+#include "roundedwidgets.h"
 
 Editor::Editor(QWidget *parent):QWidget(parent)
 {
@@ -110,20 +110,4 @@ void Editor::reset()
 QString Editor::getContentRich() const
 {
     return textEditor->toHtml();
-}
-
-TransparentWidget::TransparentWidget(QWidget *p):QWidget (p){}
-void TransparentWidget::updateMask()
-{
-    setMask(QRegion(childrenRegion()));
-}
-void TransparentWidget::resizeEvent(QResizeEvent *e)
-{
-    updateMask();
-    return QWidget::resizeEvent(e);
-}
-bool TransparentWidget::event(QEvent *e)
-{
-    if(e->type()==QEvent::WindowActivate)updateMask();
-    return QWidget::event(e);
 }

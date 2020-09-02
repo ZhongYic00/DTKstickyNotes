@@ -40,7 +40,9 @@ SOURCES += \
     fhqtreap.cpp \
     searchresult.cpp \
     searchwidget.cpp \
-    roundedwidget.cpp
+    stickywidget.cpp \
+    transparentwidget.cpp \
+    roundedwidgets.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -53,7 +55,9 @@ HEADERS += \
     zlist.h \
     searchresult.h \
     searchwidget.h \
-    roundedwidget.h
+    stickywidget.h \
+    transparentwidget.h \
+    roundedwidgets.h
 
 FORMS +=
 

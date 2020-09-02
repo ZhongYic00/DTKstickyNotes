@@ -2,10 +2,12 @@
 #include "mdialog.h"
 #include <QDebug>
 #include <DInputDialog>
+#include <DGuiApplicationHelper>
 
-ZTextEdit::ZTextEdit(QWidget* parent):DTextEdit(parent),ctrlPressed(false)
+DGUI_USE_NAMESPACE
+ZTextEdit::ZTextEdit(QWidget* parent, bool DStyle) : DTextEdit(parent), ctrlPressed(false), hackDStyle(!DStyle)
 {
-    QPalette p=this->palette();
+    auto p=palette();
     p.setBrush(QPalette::Dark,QBrush(QColor(130,130,130)));
     setPalette(p);
     setTextInteractionFlags(textInteractionFlags()|Qt::LinksAccessibleByMouse);
@@ -31,6 +33,11 @@ void ZTextEdit::mouseReleaseEvent(QMouseEvent *e)
             QDesktopServices::openUrl(QUrl(cursor.charFormat().anchorHref()));
     }
     QWidget::mousePressEvent(e);
+}
+bool ZTextEdit::event(QEvent *e)
+{
+    if(hackDStyle)return QTextEdit::event(e);
+    else return DTextEdit::event(e);
 }
 
 void ZTextEdit::insertFromMimeData(const QMimeData *src)
@@ -190,12 +197,4 @@ void ZTextEdit::updateCharFormat(const QTextCharFormat& nwfmt)
     emit fUnderlineState(nwfmt.fontUnderline());
     emit fLinethroughState(nwfmt.fontStrikeOut());
     emit pIsUrl(nwfmt.isAnchor());
-/*    if(nwfmt.background()!=sample.background())
-    {
-        qDebug()<<"ERR";
-        auto fmt=QTextCharFormat();
-        fmt.setBackground(sample.background());
-        textCursor().mergeCharFormat(fmt);
-        setTextBackgroundColor(QColor("#E5E5E5"));
-    }*/
 }

@@ -26,11 +26,12 @@ void SearchWidget::changeSearchResult(const QString &text)
         result->setVisible(true);
         active = true;
     }
-    result->filter(text);
+    if(text.length()) result->filter(text);
 }
 void SearchWidget::reset(bool b)
 {
-    if(b)return ;
+    if(active && b) return ;
+    else if(b) return changeSearchResult("");
     result->setVisible(false);
     active = false;
 }

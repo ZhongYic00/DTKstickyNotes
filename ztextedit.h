@@ -8,7 +8,7 @@ class ZTextEdit:public DTextEdit
 {
     Q_OBJECT
 public:
-    ZTextEdit(QWidget* p);
+    ZTextEdit(QWidget* p,bool DStyle=true);
 public slots:
     void fBold(bool);
     void fItalic(bool);
@@ -34,11 +34,13 @@ protected:
     void keyReleaseEvent(QKeyEvent*);
     void mouseReleaseEvent(QMouseEvent*);
     void insertFromMimeData(const QMimeData *);
+    bool event(QEvent *e);
 private:
     void fEdit(QTextCharFormat&);
     QTextCharFormat sample;
     bool ctrlPressed;
     bool editing;
+    bool hackDStyle;
 };
 
 #endif // ZTEXTEDIT_H

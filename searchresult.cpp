@@ -34,6 +34,7 @@ SearchResult::SearchResult(QWidget *parent) : QWidget (parent), model(nullptr)
 void SearchResult::moveEvent(QMoveEvent *event)
 {
     emit widgetMoving();
+    return QWidget::moveEvent(event);
 }
 void SearchResult::filter(const QString &str)
 {

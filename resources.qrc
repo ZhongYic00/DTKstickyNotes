@@ -16,6 +16,7 @@
         <file alias="splitline">resources/splitline.svg</file>
         <file alias="trash-empty">resources/trash-empty.svg</file>
         <file alias="ZhYiclogo_v2">resources/ZhYiclogo_v2.svg</file>
+        <file alias="attach">resources/attach.svg</file>
     </qresource>
     <qresource prefix="/stylesheets">
         <file>mainwindow.qss</file>

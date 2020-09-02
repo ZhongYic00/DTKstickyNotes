@@ -5,7 +5,7 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <zlistview.h>
-#include "roundedwidget.h"
+#include "roundedwidgets.h"
 
 class SearchResult : public QWidget
 {

@@ -2,10 +2,10 @@
 #define EDITOR_H
 
 #include <QtWidgets>
-//#include <DTextEdit>
 #include <dboxwidget.h>
 #include <DInputDialog>
 #include "ztextedit.h"
+#include "transparentwidget.h"
 
 DWIDGET_USE_NAMESPACE
 typedef std::pair<QString,QString> pss;
@@ -29,18 +29,6 @@ private:
     QWidget *toolBar;
     QWidget* initToolBar();
     QWidget* initToolButtons(QWidget*);
-//    bool eventFilter(QObject*,QEvent*);
-};
-
-class TransparentWidget:public QWidget
-{
-    Q_OBJECT
-public:
-    TransparentWidget(QWidget *parent=nullptr);
-private:
-    void resizeEvent(QResizeEvent*);
-    void updateMask();
-    bool event(QEvent*);
 };
 
 #endif // EDITOR_H

@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include <DApplication>
 #include <DAboutDialog>
+#include <DWidgetUtil>
 
 DWIDGET_USE_NAMESPACE
 
@@ -8,11 +9,6 @@ int main(int argc, char *argv[])
 {
     DApplication::loadDXcbPlugin();
     DApplication app(argc,argv);
-
-/*    QFile qss(":/stylesheets/mainwindow.qss");
-    qss.open(QFile::ReadOnly|QFile::Text);
-    app.setStyleSheet(qss.readAll());
-    qss.close();*/
 
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
     if(!app.setSingleInstance("DStickyNotes"))return 0;
@@ -34,7 +30,7 @@ int main(int argc, char *argv[])
     dlg->setCompanyLogo(companyLogo.pixmap(100,100));
     app.setAboutDialog(dlg);
 
-    win.move(DApplication::desktop()->screenGeometry().center()-QPoint(win.width()/2,win.height()/2));
+    Dtk::Widget::moveToCenter(&win);
     win.show();
 
     int rt=app.exec();
