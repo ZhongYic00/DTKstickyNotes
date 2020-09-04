@@ -23,10 +23,12 @@ protected:
     void resizeEvent(QResizeEvent *event);
 private:
     bool active;
+    bool freeze;
     DSearchEdit *input;
     SearchResult *result;
 private slots:
     void keepPopupPosition();
+    void melt();
 };
 
 #endif // SEARCHWIDGET_H

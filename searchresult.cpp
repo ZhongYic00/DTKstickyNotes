@@ -26,6 +26,7 @@ SearchResult::SearchResult(QWidget *parent) : QWidget (parent), model(nullptr)
 
     model=new QSortFilterProxyModel(this);
     view->setModel(model);
+    filter(""); //keep search result empty when focused first time
 
     connect(view,&QListView::clicked,[=](const QModelIndex &cur){
         emit changeCurrent(model->mapToSource(cur));
@@ -34,7 +35,7 @@ SearchResult::SearchResult(QWidget *parent) : QWidget (parent), model(nullptr)
 void SearchResult::moveEvent(QMoveEvent *event)
 {
     emit widgetMoving();
-    return QWidget::moveEvent(event);
+//    return QWidget::moveEvent(event);
 }
 void SearchResult::filter(const QString &str)
 {

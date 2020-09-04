@@ -1,6 +1,6 @@
 #include "searchwidget.h"
 
-SearchWidget::SearchWidget(QWidget *parent) : QWidget(parent), active(false)
+SearchWidget::SearchWidget(QWidget *parent) : QWidget(parent), active(false), freeze(false)
 {
     input=new DSearchEdit(this);
     result=new SearchResult(this);
@@ -11,11 +11,16 @@ SearchWidget::SearchWidget(QWidget *parent) : QWidget(parent), active(false)
     result->setVisible(false);
     setLayout(layout);
     setAttribute(Qt::WA_TranslucentBackground);
+    setFocusPolicy(Qt::ClickFocus);
 
     connect(input,&DSearchEdit::textEdited,this,&SearchWidget::changeSearchResult);
     connect(input,&DSearchEdit::focusChanged,this,&SearchWidget::reset);
     connect(result,&SearchResult::widgetMoving,this,&SearchWidget::keepPopupPosition);
-    connect(result,&SearchResult::changeCurrent,[this](const QModelIndex &cur){emit changeCurrent(cur);});
+    connect(result,&SearchResult::changeCurrent,[this](const QModelIndex &cur){
+        emit changeCurrent(cur);
+        reset(false);
+        this->previousInFocusChain()->setFocus();
+    });
 }
 void SearchWidget::changeSearchResult(const QString &text)
 {
@@ -26,19 +31,26 @@ void SearchWidget::changeSearchResult(const QString &text)
         result->setVisible(true);
         active = true;
     }
-    if(text.length()) result->filter(text);
+    if(text!="\255") result->filter(text);
 }
 void SearchWidget::reset(bool b)
 {
-    if(active && b) return ;
-    else if(b) return changeSearchResult("");
+//    qDebug()<<"call reset"<<b<<active;
+    if((active || freeze) && b) return ;
+    else if(b) return changeSearchResult("\255");
     result->setVisible(false);
     active = false;
+    freeze=true;
+    QTimer::singleShot(100,this,SLOT(melt()));
+}
+void SearchWidget::melt()
+{
+    freeze=false;
 }
 void SearchWidget::moveEvent(QMoveEvent *event)
 {
     keepPopupPosition();
-    QWidget::moveEvent(event);
+//    QWidget::moveEvent(event);
 }
 void SearchWidget::resizeEvent(QResizeEvent *event)
 {
@@ -46,7 +58,7 @@ void SearchWidget::resizeEvent(QResizeEvent *event)
     {
         result->setFixedWidth(input->width());
     }
-    QWidget::resizeEvent(event);
+//    QWidget::resizeEvent(event);
 }
 void SearchWidget::keepPopupPosition()
 {
