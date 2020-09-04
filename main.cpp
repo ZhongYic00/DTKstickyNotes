@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     auto dlg=new DAboutDialog;
     dlg->setProductName("便笺");
     dlg->setProductIcon(QIcon(":/images/logo.svg.png"));
-    dlg->setVersion("0.0.1");
+    dlg->setVersion("0.0.3-beta");
     dlg->setDescription(QWidget::tr("基于DTK开发的linux桌面便笺工具"));
     dlg->setWebsiteName("By Rubbish_ZhYic");
     dlg->setWebsiteLink("https://github.com/zhongyic00/");
