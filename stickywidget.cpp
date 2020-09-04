@@ -37,7 +37,8 @@ void StickyWidget::initWidgets()
         connect(attachButton,&DIconButton::clicked,[this](){
             note.toggleAttach();
             emit this->attach();
-            this->deleteLater();
+//            this->deleteLater();
+            this->hide();
         });
         titleBarLayout->addStretch();
         titleBarLayout->addWidget(attachButton);

@@ -98,6 +98,7 @@ void Systemtray::addNote(ZNote note, bool existing)
         widget->removeEventFilter(daemon);
         this->updateNote(widget);
         this->updateStickyNotesMenu(widget,false);
+//        delete widget;
     });
     widget->installEventFilter(daemon);
     updateStickyNotesMenu(widget,true);
