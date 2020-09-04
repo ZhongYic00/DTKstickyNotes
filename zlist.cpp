@@ -1,16 +1,18 @@
 #include "zlist.h"
 #include "editor.h"
-#include <DPushButton>
-#include <DGuiApplicationHelper>
-#include <DPlatformTheme>
 
 DGUI_USE_NAMESPACE
-ZList::ZList(QWidget *parent):QWidget(parent),curRow(-1),haveChange(false)
+ZList::ZList(Daemon *d,QWidget *parent):QWidget(parent), daemon(d), haveChange(false)
 {
+    qDebug()<<curIdx;
     listview=new ZListView(this);
-    model=new ZListModel;
+    model=new QSortFilterProxyModel(this);
+    model->setSourceModel(daemon->getModel());
+    model->setFilterRole(ZListModel::DisplayType);
+    model->setFilterFixedString("attach");
+
     listview->setModel(model);
-    listview->setObjectName("listview");
+//    listview->setObjectName("listview");
     listview->setNoBackground(true);
 
     DGuiApplicationHelper *guiAppHelp = DGuiApplicationHelper::instance();
@@ -18,12 +20,14 @@ ZList::ZList(QWidget *parent):QWidget(parent),curRow(-1),haveChange(false)
     setLayout(initAddLayer());
 
     listview->setContextMenuPolicy(Qt::CustomContextMenu);
-//    connect(this,&ZList::rightClickItems,this,&ZList::popupMenu);
     connect(listview,&QListView::customContextMenuRequested,[this](const QPoint &pos){
-        popupMenu(mapToGlobal(pos),listview->selection());
+        popupMenu(mapToGlobal(pos));
     });
-    connect(listview,&QListView::clicked,[this](const QModelIndex &cur){emit currentChanged(cur);});
-    connect(listview,&ZListView::activeChange,this,&ZList::currentChanged);
+    connect(listview,&ZListView::curIndexChanged,this,&ZList::currentChanged);
+    connect(this,&ZList::currentChanged,[this](QModelIndex index){
+        this->curIdx=index.data(Qt::UserRole).value<ZNote>().getUpdateTimeRaw();
+    });
+    connect(listview,&ZListView::listEmptied,[this](){emit listEmptied();});
 }
 QWidget* ZList::initAddButton()
 {
@@ -68,13 +72,6 @@ QWidget* ZList::initAddButton()
     btn->setGraphicsEffect(effect);
 
     connect(btn,&DPushButton::clicked,[this](){addItem(ZNote());});
-    connect(btn,&QPushButton::clicked,[this](){
-        auto i=model->latestIndex();
-        listview->setCurrentIndex(i);
-        emit currentChanged(i);
-    });
-    connect(this,&ZList::currentChanged,this,&ZList::setCur);
-    connect(listview,&ZListView::listEmptied,[this](){emit listEmptied();});
 
     bar->addStretch();
     bar->addWidget(btn);
@@ -90,27 +87,16 @@ QLayout* ZList::initAddLayer()
 }
 void ZList::addItem(const ZNote &item)
 {
-    model->appendRow(item);
-}
-void ZList::addItems(const QList<ZNote> &items)
-{
-    listview->setUpdatesEnabled(false);
-    for(auto i:items)
-        addItem(i);
-    listview->setUpdatesEnabled(true);
-}
-void ZList::removeItem(const ZNote &item)
-{
-    model->removeRow(item);
+    qDebug()<<"model->rowCount()"<<model->rowCount();
+    daemon->addItem(item);
+    auto i=model->index(0,0);
+    qDebug()<<"model->rowCount()"<<model->rowCount();
+    listview->setCurrentIndex(i);
+    emit currentChanged(i);
 }
 void ZList::removeItems(const QList<ZNote> &items)
 {
-    for(auto i:items)
-        removeItem(i);
-}
-QList<ZNote> ZList::getDataList() const
-{
-    return model->exportAll();
+    daemon->removeItems(items);
 }
 void ZList::setCurrentOverview(const QString &overview)
 {
@@ -127,30 +113,42 @@ void ZList::setCurrentHtml(const QString &html)
 void ZList::commitChange(bool trace)    //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit
 {
     haveChange=false;
-    auto curIndex=model->index(curRow);
-    model->setData(curIndex,QVariant(),ZListModel::UpdateTime);
-    if(trace)listview->setCurrentIndex(model->index(0));
+    curIdx=daemon->commitChange(curIdx,false);
+    if(trace)listview->setCurrentIndex(model->index(0,0));
 }
-void ZList::setCur(const QModelIndex &idx)
+void ZList::popupMenu(const QPoint &pos)
 {
-    if(curRow!=-1 && haveChange)commitChange(false);
-    curRow=idx.row();
-    haveChange=false;
-}
-void ZList::popupMenu(const QPoint &pos, const QList<ZNote> &selection)
-{
+    auto selection=listview->selectionNotes();
     QMenu *menu=new QMenu();
     QAction *removeAction=new QAction(QIcon(":/images/trash-empty"),tr("删除"),menu);
-    connect(removeAction,&QAction::triggered,[&selection,this](){removeItems(selection);listview->clearSelectionExt();});
+    auto indexOf=[=](InnerIndex &idx){
+        return this->model->mapFromSource(daemon->getModel()->indexOf(idx));
+    };
+    connect(removeAction,&QAction::triggered,[&selection,this,&indexOf](){
+        listview->clearSelectionExt();
+        removeItems(selection);
+        listview->setCurrentIndex(indexOf(curIdx));
+    });
     menu->addAction(removeAction);
+    if(selection.length()==1)
+    {
+        QAction *detachAction=new QAction(tr("解除吸附"),menu);
+        auto index=listview->selection()[0];
+        connect(detachAction,&QAction::triggered,[index,this,&indexOf](){
+            listview->clearSelectionExt();
+            daemon->detach(index.data(ZListModel::UpdateTime).value<QDateTime>());
+            listview->setCurrentIndex(indexOf(curIdx));
+        });
+        menu->addAction(detachAction);
+    }
     menu->exec(pos);
-}
-ZListModel* ZList::getModel()
-{
-    return model;
 }
 void ZList::setCurrentIndex(const QModelIndex &cur)
 {
     if(cur.isValid())
         listview->setCurrentIndex(cur);
+}
+QAbstractItemModel* ZList::getModel()
+{
+    return model;
 }

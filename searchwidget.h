@@ -11,7 +11,7 @@ class SearchWidget : public QWidget
     Q_OBJECT
 public:
     explicit SearchWidget(QWidget *parent = nullptr);
-    void setSourceModel(QAbstractListModel *m);
+    void setSourceModel(QAbstractItemModel *m);
 
 signals:
     void changeCurrent(const QModelIndex &cur);

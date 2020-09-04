@@ -4,7 +4,8 @@
 #include <QSortFilterProxyModel>
 #include <QVBoxLayout>
 #include <QLabel>
-#include <zlistview.h>
+#include "zlistview.h"
+#include "zlistmodel.h"
 #include "roundedwidgets.h"
 
 class SearchResult : public QWidget
@@ -14,7 +15,7 @@ public:
     explicit SearchResult(QWidget *parent);
     void reset();
     void filter(const QString &str);
-    void setSrcModel(QAbstractListModel *m);
+    void setSrcModel(QAbstractItemModel *m);
 signals:
     void widgetMoving();
     void changeCurrent(const QModelIndex &cur);

@@ -8,11 +8,11 @@
 #include <QtWidgets>
 #include <QDebug>
 
-#include "backend.h"
 #include "editor.h"
 #include "zlist.h"
 #include "searchwidget.h"
 #include "stickywidget.h"
+#include "daemon.h"
 
 DWIDGET_USE_NAMESPACE
 
@@ -21,15 +21,17 @@ class MainWindow : public DMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(ZBackend *back,QWidget *parent = nullptr);
+    explicit MainWindow(Daemon *daemon, QWidget *parent = nullptr);
     ~MainWindow();
 public slots:
     void save();
+protected:
+    void closeEvent(QCloseEvent *e);
 private:
+    Daemon *daemon;
     QHBoxLayout *mainLayout;
     ZList *notesListView;
     Editor *noteEditView;
-    ZBackend *backend;
     bool modified;  //records changes to any item
 
     void display(const QModelIndex &item);

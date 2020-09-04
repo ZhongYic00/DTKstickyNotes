@@ -1,7 +1,6 @@
-#include "mainwindow.h"
 #include <DApplication>
 #include <DAboutDialog>
-#include <DWidgetUtil>
+#include "systemtray.h"
 
 DWIDGET_USE_NAMESPACE
 
@@ -16,10 +15,10 @@ int main(int argc, char *argv[])
     app.setProductIcon(QIcon(":/images/logo.svg.png"));
     app.setOrganizationName("Rubbishtech Co.,Ltd");
 
-    auto backend=new ZBackend;
-    MainWindow win(backend);
+    Systemtray tray(&app);
+    tray.show();
 
-    auto dlg=new DAboutDialog(&win);
+    auto dlg=new DAboutDialog;
     dlg->setProductName("便笺");
     dlg->setProductIcon(QIcon(":/images/logo.svg.png"));
     dlg->setVersion("0.0.1");
@@ -30,10 +29,7 @@ int main(int argc, char *argv[])
     dlg->setCompanyLogo(companyLogo.pixmap(100,100));
     app.setAboutDialog(dlg);
 
-    Dtk::Widget::moveToCenter(&win);
-    win.show();
-
     int rt=app.exec();
-    win.save();
+    tray.save();
     return rt;
 }

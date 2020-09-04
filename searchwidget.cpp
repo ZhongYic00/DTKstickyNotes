@@ -38,6 +38,7 @@ void SearchWidget::reset(bool b)
 void SearchWidget::moveEvent(QMoveEvent *event)
 {
     keepPopupPosition();
+    QWidget::moveEvent(event);
 }
 void SearchWidget::resizeEvent(QResizeEvent *event)
 {
@@ -45,6 +46,7 @@ void SearchWidget::resizeEvent(QResizeEvent *event)
     {
         result->setFixedWidth(input->width());
     }
+    QWidget::resizeEvent(event);
 }
 void SearchWidget::keepPopupPosition()
 {
@@ -53,7 +55,7 @@ void SearchWidget::keepPopupPosition()
     result->move(mapToGlobal(QPoint(0,input->height())));
     result->blockSignals(false);
 }
-void SearchWidget::setSourceModel(QAbstractListModel *m)
+void SearchWidget::setSourceModel(QAbstractItemModel *m)
 {
     result->setSrcModel(m);
 }

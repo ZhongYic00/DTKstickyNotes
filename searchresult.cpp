@@ -45,7 +45,7 @@ void SearchResult::filter(const QString &str)
     else
         model->setFilterFixedString("\127");
 }
-void SearchResult::setSrcModel(QAbstractListModel *m)
+void SearchResult::setSrcModel(QAbstractItemModel *m)
 {
     model->setSourceModel(m);
 }

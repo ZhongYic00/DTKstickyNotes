@@ -1,13 +1,13 @@
 #include "znote.h"
 
-ZNote::ZNote()
+ZNote::ZNote(QString type) : displayType(type)
 {
     updateTime=createTime=QDateTime::currentDateTime();
 }
-ZNote::ZNote(QDateTime create,QDateTime upd,QString html,QString overview):createTime(create),updateTime(upd),html(html),overview(overview){}
-ZNote::ZNote(ZNote &other):createTime(other.createTime),updateTime(other.updateTime),html(other.html),overview(other.overview){}
-ZNote::ZNote(const ZNote &other):createTime(other.createTime),updateTime(other.updateTime),html(other.html),overview(other.overview){}
-ZNote::ZNote(const QJsonObject &obj)
+ZNote::ZNote(QDateTime create,QDateTime upd,QString html,QString overview, QString type):createTime(create),updateTime(upd),html(html),overview(overview),displayType(type){}
+ZNote::ZNote(ZNote &other):createTime(other.createTime),updateTime(other.updateTime),html(other.html),overview(other.overview),displayType(other.displayType){}
+ZNote::ZNote(const ZNote &other):createTime(other.createTime),updateTime(other.updateTime),html(other.html),overview(other.overview),displayType(other.displayType){}
+ZNote::ZNote(const QJsonObject &obj) : displayType("attach")
 {
 //    qDebug()<<obj;
     if(obj.contains("createTime")&obj.contains("updateTime")&obj.contains("html")&obj.contains("overview"))
@@ -24,6 +24,18 @@ bool ZNote::operator<(const ZNote &x)
 bool ZNote::operator<=(const ZNote &x)
 {
     return updateTime>=x.updateTime;
+}
+bool ZNote::operator>(const ZNote &x)
+{
+    return updateTime<x.updateTime;
+}
+bool ZNote::operator<(const QDateTime &x)
+{
+    return updateTime>x;
+}
+bool ZNote::operator>(const QDateTime &x)
+{
+    return updateTime<x;
 }
 QDateTime ZNote::lastModified()
 {
@@ -60,6 +72,7 @@ QJsonObject ZNote::jsonObject() const
 }
 void ZNote::print() const
 {
+//    qDebug()<<overview<<displayType;
     qDebug()<<jsonObject();
 }
 QString ZNote::humanDateTime(const QDateTime &from)
@@ -81,4 +94,16 @@ QString ZNote::getUpdateTime() const
 QString ZNote::getCreateTime() const
 {
     return humanDateTime(createTime);
+}
+QString ZNote::getAttach() const
+{
+    return displayType;
+}
+void ZNote::toggleAttach()
+{
+    displayType=(displayType=="attach")?"detach":"attach";
+}
+QDateTime ZNote::getUpdateTimeRaw() const
+{
+    return updateTime;
 }

@@ -1,17 +1,17 @@
 #include "mainwindow.h"
 #include <DThemeManager>
 #include <DVerticalLine>
+#include <DApplication>
 
 DTK_USE_NAMESPACE
 
-MainWindow::MainWindow(ZBackend *back,QWidget *parent) :
-    DMainWindow(parent),modified(false)
+MainWindow::MainWindow(Daemon *d,QWidget *parent) :
+    DMainWindow(parent), daemon(d), modified(false)
 {
     setMinimumSize(800,800);
 
-    backend=back;
     mainLayout=new QHBoxLayout(this);
-    notesListView=new ZList;
+    notesListView=new ZList(daemon,this);
     notesListView->setObjectName("List");
     notesListView->setFixedWidth(300);
     noteEditView=new Editor(this);
@@ -24,8 +24,16 @@ MainWindow::MainWindow(ZBackend *back,QWidget *parent) :
     mainLayout->addWidget(noteEditView);
     mainLayout->addSpacing(5);
 
-    connect(notesListView,&ZList::currentChanged,[this](const QModelIndex &item){noteEditView->blockSignals(true);noteEditView->display(item.data(Qt::UserRole).value<ZNote>().getHtml());noteEditView->blockSignals(false);});
-    connect(noteEditView,&Editor::contentChanged,[this](const pss val){notesListView->setCurrentOverview(val.first);notesListView->setCurrentHtml(val.second);modified=true;});
+    connect(notesListView,&ZList::currentChanged,[this](const QModelIndex &item){
+        noteEditView->blockSignals(true);
+        noteEditView->display(item.data(Qt::UserRole).value<ZNote>().getHtml());
+        noteEditView->blockSignals(false);
+    });
+    connect(noteEditView,&Editor::contentChanged,[this](const pss val){
+        notesListView->setCurrentOverview(val.first);
+        notesListView->setCurrentHtml(val.second);
+        modified=true;
+    });
     connect(notesListView,&ZList::listEmptied,[this](){reset();});
 
     initNotesListView();
@@ -55,14 +63,12 @@ MainWindow::MainWindow(ZBackend *back,QWidget *parent) :
     saveAction->setShortcut(QKeySequence::Save);
     connect(saveAction,&QAction::triggered,this,&MainWindow::save);
     addAction(saveAction);
-
-    auto tmp=new StickyWidget;
-    tmp->show();
+}
+MainWindow::~MainWindow()
+{
 }
 void MainWindow::initNotesListView()
 {
-    auto list=backend->getSavedDataList();
-    notesListView->addItems(list);
 //如果没有创建过的note，自动新建
     reset();
 }
@@ -70,14 +76,15 @@ void MainWindow::save()
 {
     if(!modified)return ;
     notesListView->commitChange();
-    backend->save(notesListView->getDataList());
+    daemon->save();
     modified=false;
 }
 void MainWindow::reset()
 {
     noteEditView->reset();
 }
-MainWindow::~MainWindow()
+void MainWindow::closeEvent(QCloseEvent *e)
 {
+    e->ignore();
+    hide();
 }
-

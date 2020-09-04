@@ -1,6 +1,6 @@
 #include "stickywidget.h"
 
-StickyWidget::StickyWidget(QWidget *parent) : DBlurEffectWidget (parent)
+StickyWidget::StickyWidget(QObject *parent)
 {
     setBlendMode(DBlurEffectWidget::BehindWindowBlend);
     setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
@@ -17,10 +17,14 @@ void StickyWidget::initWidgets()
     auto bottomLayer=new QWidget(this);
     auto bottomLayout=new QVBoxLayout(bottomLayer);
 
-    auto editor=new ZTextEdit(this,false);
+    editor=new ZTextEdit(this,false);
     {//init editor
         editor->viewport()->setAttribute(Qt::WA_TranslucentBackground);
 //        editor->setAttribute(Qt::WA_TranslucentBackground);
+        connect(editor,&ZTextEdit::textChanged,[this](){
+            note.setHtml(editor->toHtml());
+            note.setOverview(editor->toPlainText());
+        });
     }
 
     auto titleBarLayout=new QHBoxLayout(topLayer);
@@ -29,7 +33,11 @@ void StickyWidget::initWidgets()
         attachButton->setFlat(true);
         attachButton->setIcon(QIcon(":/images/attach"));
         attachButton->setIconSize(QSize(30,35));
-        connect(attachButton,&DIconButton::clicked,this,&QWidget::close);
+        connect(attachButton,&DIconButton::clicked,[this](){
+            note.toggleAttach();
+            emit this->attach();
+            this->hide();
+        });
         titleBarLayout->addStretch();
         titleBarLayout->addWidget(attachButton);
     }
@@ -97,4 +105,17 @@ QWidget* StickyWidget::initToolBar(QWidget *parent,ZTextEdit *textEditor)
 
     bar->setLayout(layout);
     return bar;
+}
+/*void StickyWidget::focusOutEvent(QFocusEvent *e)
+{
+    commitChange(note);
+}*/
+void StickyWidget::setNote(ZNote &d)
+{
+    note=d;
+    editor->setHtml(d.getHtml());
+}
+ZNote StickyWidget::getNote()
+{
+    return note;
 }

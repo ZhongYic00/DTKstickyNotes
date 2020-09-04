@@ -42,7 +42,10 @@ SOURCES += \
     searchwidget.cpp \
     stickywidget.cpp \
     transparentwidget.cpp \
-    roundedwidgets.cpp
+    roundedwidgets.cpp \
+    systemtray.cpp \
+    daemon.cpp \
+    zlistmodel.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -57,7 +60,10 @@ HEADERS += \
     searchwidget.h \
     stickywidget.h \
     transparentwidget.h \
-    roundedwidgets.h
+    roundedwidgets.h \
+    systemtray.h \
+    daemon.h \
+    zlistmodel.h
 
 FORMS +=
 

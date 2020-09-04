@@ -11,7 +11,6 @@ DGUI_USE_NAMESPACE
 DTK_USE_NAMESPACE
 ZListView::ZListView(QWidget *parent):QListView(parent)
 {
-//    setMouseTracking(true);
     setDragEnabled(false);
     setBatchSize(100);
     setLayoutMode(QListView::Batched);
@@ -23,8 +22,14 @@ ZListView::ZListView(QWidget *parent):QListView(parent)
     setItemDelegate(new ItemDelegate(this));
     setSpacing(2);
     viewport()->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
+
+    connect(this,&QListView::clicked,[this](const QModelIndex &cur){emit curIndexChanged(cur);});
 }
-QList<ZNote> ZListView::selection()const
+QList<QModelIndex> ZListView::selection() const
+{
+    return selectedIndexes();
+}
+QList<ZNote> ZListView::selectionNotes()const
 {
     auto indexes=selectedIndexes();
     QList<ZNote> rt;
@@ -35,113 +40,25 @@ QList<ZNote> ZListView::selection()const
 void ZListView::clearSelectionExt()
 {
     if(!selectionModel()->hasSelection()) return ;
-    int front=selectedIndexes().front().row();
+    int front=selectedIndexes().front().row(), back=selectedIndexes().back().row();
+    qDebug()<<front<<back<<model()->rowCount();
     clearSelection();
-    if(model()->rowCount()>front)
-        setCurrentIndex(model()->index(front,0));
-    else if(model()->rowCount()!=0)setCurrentIndex(model()->index(front-1,0));
+    if(model()->rowCount()>back+1)
+        setCurrentIndex(model()->index(back+1,0));
+    else if(front!=0)setCurrentIndex(model()->index(front-1,0));
     else emit listEmptied();
 }
 void ZListView::setCurrentIndex(const QModelIndex &cur)
 {
-//    clearSelection();
+    if(cur.isValid()&&cur.model()==model())qDebug()<<"call ZListView::setCurrentIndex"<<cur;
     selectionModel()->setCurrentIndex(cur,QItemSelectionModel::SelectCurrent);
-    emit activeChange(cur);
-//    QListView::setCurrentIndex(cur);
+    emit curIndexChanged(cur);
 }
 void ZListView::setNoBackground(bool b)
 {
     if(!b)return ;
     viewport()->setAutoFillBackground(false);
     setFrameShape(QFrame::NoFrame);
-}
-
-int ZListModel::rowCount(const QModelIndex &parent) const
-{
-    return static_cast<int>(items.size());
-}
-QVariant ZListModel::data(const QModelIndex &index, int role) const
-{
-//    qDebug()<<"call data"<<index.row()<<"role"<<role;
-    if(!index.isValid())return QVariant();
-    auto rt=items.getKth(index.row()+1);
-    if(role==Qt::UserRole)
-    {
-        return QVariant::fromValue(rt);
-    }
-    else if(role==UpdateTime)
-    {
-        return QVariant::fromValue(rt.lastModified());
-    }
-    else if(role==Html)
-    {
-        return QVariant::fromValue(rt.getHtml());
-    }
-    else if(role==Overview)
-    {
-        return QVariant::fromValue(rt.getOverview());
-    }
-    return QVariant();
-}
-bool ZListModel::insertRows(int row, int count, const QModelIndex &parent)
-{
-    beginInsertRows(parent,row,row+count);
-
-    endInsertRows();
-}
-bool ZListModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-    if(!index.isValid())return false;
-    if(role==Overview || role==Html)
-    {
-//        qDebug()<<"updating html/overview";
-        auto str=value.value<QString>();
-        items.modifyKth(index.row()+1,[str,role](ZNote *key){
-            if(role==Overview) key->setOverview(str);
-            else if(role==Html) key->setHtml(str);
-            else qDebug()<<"ZListModel::setData error";
-        });
-    }
-    else if(role==UpdateTime)
-    {
-        auto itemData=index.data(Qt::UserRole).value<ZNote>();
-        items.erase(itemData);
-        itemData.commitChange();
-        items.insert(itemData);
-    }
-    emit dataChanged(index,index,QVector<int>({Qt::UserRole}));
-    return true;
-}
-void ZListModel::appendRow(const ZNote &value)
-{
-    emit layoutAboutToBeChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
-//    beginInsertRows(QModelIndex(),0,rowCount()+1);
-    items.insert(value);
-//   changePersistentIndexList();
-//    endInsertRows();
-    emit layoutChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
-}
-void ZListModel::removeRow(const ZNote &value)
-{
-    emit layoutAboutToBeChanged();
-//    beginInsertRows(parent);
-    items.erase(value);
-//    changePersistentIndexList();
-//    endInsertRows();
-    emit layoutChanged();
-}
-QModelIndex ZListModel::latestIndex() const
-{
-    return index(0);
-}
- QList<ZNote> ZListModel::exportAll() const
-{
-//     qDebug()<<"call ZListModel::exportAll()";
-    return QList<ZNote>::fromStdList(items.getAll());
-}
-void ZListModel::dbg()
-{
-    qDebug()<<"max depth"<<items.depth();
 }
 
 ItemDelegate::ItemDelegate(QWidget *parent):QStyledItemDelegate(parent){}

@@ -66,10 +66,26 @@ public:
     {
         return getKth(root,k);
     }
+    template<typename T1>
+    T getKth(T1 k) const
+    {
+        return getKth(root,k);
+    }
+    template<typename T1>
+    int queryIndex(T1 k)
+    {
+        qDebug()<<"Treap::root="<<root;
+        return queryIndex(root,k);
+    }
     template<typename F>
     void modifyKth(int k, F function)
     {
-        modifyKth(root,k,function);
+        modifyKth(root, k, function);
+    }
+    template<typename T1, typename F>
+    void modifyKth(T1 k, F function)
+    {
+        modifyKth(root, k, function);
     }
     int size() const
     {
@@ -137,6 +153,30 @@ private:
         else
             return getKth(t->ch[0],k);
     }
+    template<typename T1>
+    T getKth(tree t, T1 k) const
+    {
+        if(!t)return T();
+        if(*t->key<k)
+            return getKth(t->ch[1],k);
+        else if(*t->key>k)
+            return getKth(t->ch[0],k);
+        else
+            return *(t->key);
+    }
+    template<typename T1>
+    int queryIndex(tree t, T1 k)
+    {
+//        qDebug()<<"Treap::queryIndex("<<t<<")";
+//        qDebug()<<t->key->getUpdateTimeRaw();
+        if(!t) return 0;
+        if(*t->key<k)
+            return queryIndex(t->ch[1],k)+(1+(t->ch[0]?t->ch[0]->tSize:0));
+        else if(*t->key>k)
+            return queryIndex(t->ch[0],k);
+        else
+            return (1+(t->ch[0]?t->ch[0]->tSize:0));
+    }
     template<typename F>
     void modifyKth(tree t,int k,F func)
     {
@@ -148,6 +188,17 @@ private:
             func(t->key.get());
         else
             modifyKth(t->ch[0],k,func);
+    }
+    template<typename T1,typename F>
+    void modifyKth(tree t, T1 k, F func)
+    {
+        if(!t) return ;
+        if(*t->key<k)
+            modifyKth(t->ch[1], k, func);
+        else if(*t->key>k)
+            modifyKth(t->ch[0],k,func);
+        else
+            func(t->key.get());
     }
     tree merge(tree l,tree r)
     {

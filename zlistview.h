@@ -4,36 +4,19 @@
 #include <QListView>
 #include <QStyledItemDelegate>
 #include "znote.h"
-#include "fhqtreap.cpp"
-
-class ZListModel:public QAbstractListModel
-{
-public:
-    enum roles{Overview=Qt::UserRole+1,Html=Qt::UserRole+2,UpdateTime=Qt::UserRole+3};
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex());
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
-    void appendRow(const ZNote &value);
-    void removeRow(const ZNote &value);
-    QModelIndex latestIndex() const;
-    QList<ZNote> exportAll() const;
-    void dbg();
-private:
-    Treap<ZNote> items;
-};
 
 class ZListView: public QListView
 {
     Q_OBJECT
 public:
     ZListView(QWidget *parent=nullptr);
-    QList<ZNote> selection() const;
+    QList<ZNote> selectionNotes() const;
+    QList<QModelIndex> selection() const;
     void clearSelectionExt();
     void setCurrentIndex(const QModelIndex &cur);
     void setNoBackground(bool b);
 signals:
-    void activeChange(const QModelIndex &cur);
+    void curIndexChanged(const QModelIndex &cur);
     void listEmptied();
 };
 
