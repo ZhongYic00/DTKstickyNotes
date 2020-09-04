@@ -41,7 +41,7 @@ void ZListView::clearSelectionExt()
 {
     if(!selectionModel()->hasSelection()) return ;
     int front=selectedIndexes().front().row(), back=selectedIndexes().back().row();
-    qDebug()<<front<<back<<model()->rowCount();
+//    qDebug()<<front<<back<<model()->rowCount();
     clearSelection();
     if(model()->rowCount()>back+1)
         setCurrentIndex(model()->index(back+1,0));
@@ -50,7 +50,8 @@ void ZListView::clearSelectionExt()
 }
 void ZListView::setCurrentIndex(const QModelIndex &cur)
 {
-    if(cur.isValid()&&cur.model()==model())qDebug()<<"call ZListView::setCurrentIndex"<<cur;
+//    if(cur.isValid()&&cur.model()==model())qDebug()<<"call ZListView::setCurrentIndex"<<cur;
+    clearSelection();
     selectionModel()->setCurrentIndex(cur,QItemSelectionModel::SelectCurrent);
     emit curIndexChanged(cur);
 }

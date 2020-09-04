@@ -16,7 +16,10 @@ private:
     MainWindow *win;
     Daemon *daemon;
     QSortFilterProxyModel *stickyNotes;
+    QMenu *noteSubmenu;
+    std::map<StickyWidget*,QAction*> stickyWidgets;
     void addNote(ZNote note=ZNote("detach"), bool existing=false);
+    void updateStickyNotesMenu(StickyWidget *widget, bool isAdding);
 private slots:
     void updateNote(StickyWidget *note);
 };

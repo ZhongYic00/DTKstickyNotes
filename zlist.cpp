@@ -4,7 +4,7 @@
 DGUI_USE_NAMESPACE
 ZList::ZList(Daemon *d,QWidget *parent):QWidget(parent), daemon(d), haveChange(false)
 {
-    qDebug()<<curIdx;
+//    qDebug()<<curIdx;
     listview=new ZListView(this);
     model=new QSortFilterProxyModel(this);
     model->setSourceModel(daemon->getModel());
@@ -87,10 +87,10 @@ QLayout* ZList::initAddLayer()
 }
 void ZList::addItem(const ZNote &item)
 {
-    qDebug()<<"model->rowCount()"<<model->rowCount();
+//    qDebug()<<"model->rowCount()"<<model->rowCount();
     daemon->addItem(item);
     auto i=model->index(0,0);
-    qDebug()<<"model->rowCount()"<<model->rowCount();
+//    qDebug()<<"model->rowCount()"<<model->rowCount();
     listview->setCurrentIndex(i);
     emit currentChanged(i);
 }

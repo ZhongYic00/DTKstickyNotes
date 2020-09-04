@@ -42,7 +42,7 @@ Systemtray::Systemtray(QObject *parent) : QSystemTrayIcon (parent)
             addNote();
         });
         menu->addAction(add);
-        auto noteSubmenu=new QMenu(tr("sticky notes"),menu);
+        noteSubmenu=new QMenu(tr("sticky notes"),menu);
         menu->addMenu(noteSubmenu);
         auto quit=new QAction(tr("Quit"),menu);
         connect(quit,&QAction::triggered,qApp,&QApplication::quit);
@@ -68,10 +68,7 @@ Systemtray::Systemtray(QObject *parent) : QSystemTrayIcon (parent)
             qDebug()<<"subIndex is Valid";
             addNote(index.data(Qt::UserRole).value<ZNote>(),true);
         }*/
-//        qDebug()<<this;
         addNote(daemon->getModel()->data(idx,Qt::UserRole).value<ZNote>(),true);
-//        qDebug()<<"test"<<daemon->getModel()->indexOf(idx);
-//        qDebug()<<"daemon="<<daemon;
     });
 }
 void Systemtray::updateNote(StickyWidget *obj)
@@ -92,15 +89,44 @@ void Systemtray::save()
 }
 void Systemtray::addNote(ZNote note, bool existing)
 {
-        if(!existing)daemon->addItem(note);
+    if(!existing)daemon->addItem(note);
 //        qDebug()<<"addNote(";note.print();
-        auto widget=new StickyWidget(this);
-        widget->setNote(note);
-        updateNote(widget);
-        connect(widget,&StickyWidget::attach,[this,widget](){
-            widget->removeEventFilter(daemon);
-            this->updateNote(widget);
+    auto widget=new StickyWidget(this);
+    widget->setNote(note);
+    updateNote(widget);
+    connect(widget,&StickyWidget::attach,[this,widget](){
+        widget->removeEventFilter(daemon);
+        this->updateNote(widget);
+        this->updateStickyNotesMenu(widget,false);
+    });
+    widget->installEventFilter(daemon);
+    updateStickyNotesMenu(widget,true);
+    widget->show();
+}
+void Systemtray::updateStickyNotesMenu(StickyWidget *widget, bool isAdding)
+{
+    auto generateAction=[&](StickyWidget *widget){
+        auto rt=new QAction(widget->getNote().getOverview(), noteSubmenu);
+        connect(rt,&QAction::triggered,[widget](){
+            widget->activateWindow();
         });
-        widget->installEventFilter(daemon);
-        widget->show();
+        connect(widget,&StickyWidget::textChanged,[rt](const QString &text){
+            QFontMetrics m(rt->font());
+            rt->setText(m.elidedText(text,Qt::ElideRight,100));
+        });
+        return rt;
+    };
+    if(isAdding)
+    {
+        auto action=generateAction(widget);
+        stickyWidgets[widget]=action;
+        noteSubmenu->addAction(action);
+    }
+    else
+    {
+        auto action=stickyWidgets[widget];
+        noteSubmenu->removeAction(action);
+        stickyWidgets.erase(widget);
+        action->deleteLater();
+    }
 }

@@ -21,6 +21,7 @@ public:
     ZNote getNote();
 signals:
     void attach();
+    void textChanged(const QString &text="");
 protected:
 //    void focusOutEvent(QFocusEvent *e);
 private:

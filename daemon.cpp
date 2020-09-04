@@ -49,7 +49,6 @@ void Daemon::commitChange(const QModelIndex &index, bool toggleAttach)    //ä¼˜å
 }
 ZListModel* Daemon::getModel()
 {
-    qDebug()<<"model="<<model;
     return model;
 }
 void Daemon::save()
@@ -75,7 +74,6 @@ bool Daemon::eventFilter(QObject *obj, QEvent *e)
 }
 void Daemon::detach(InnerIndex idx)
 {
-    qDebug()<<"call Daemon::detach";
     idx=commitChange(idx,true);
 //    emit itemDetached(model->indexOf(idx));
     emit itemDetached(idx);

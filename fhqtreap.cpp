@@ -74,7 +74,7 @@ public:
     template<typename T1>
     int queryIndex(T1 k)
     {
-        qDebug()<<"Treap::root="<<root;
+//        qDebug()<<"Treap::root="<<root;
         return queryIndex(root,k);
     }
     template<typename F>

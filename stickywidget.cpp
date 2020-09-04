@@ -24,6 +24,7 @@ void StickyWidget::initWidgets()
         connect(editor,&ZTextEdit::textChanged,[this](){
             note.setHtml(editor->toHtml());
             note.setOverview(editor->toPlainText());
+            emit this->textChanged(editor->toPlainText());
         });
     }
 
@@ -36,7 +37,7 @@ void StickyWidget::initWidgets()
         connect(attachButton,&DIconButton::clicked,[this](){
             note.toggleAttach();
             emit this->attach();
-            this->hide();
+            this->deleteLater();
         });
         titleBarLayout->addStretch();
         titleBarLayout->addWidget(attachButton);
