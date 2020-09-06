@@ -101,7 +101,7 @@ inline void ZTextEdit::fEdit(QTextCharFormat &fmt) {
 }
 void ZTextEdit::fBold(bool b) {
 	auto fmt = QTextCharFormat();
-	fmt.setFontWeight(b ? QFont::DemiBold : QFont::Normal);
+	fmt.setFontWeight(b ? 68 : QFont::Normal);
 	fEdit(fmt);
 }
 void ZTextEdit::fItalic(bool b) {
