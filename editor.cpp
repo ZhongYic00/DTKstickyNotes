@@ -3,6 +3,7 @@
 
 Editor::Editor(QWidget *parent) : QWidget(parent) {
 	textEditor = new ZTextEdit(this);
+	textEditor->setBottomMargin(80);
 	textEditor->setObjectName("textEditor");
 	connect(textEditor, &ZTextEdit::textChanged,
 			[this]() { emit contentChanged(std::make_pair(textEditor->toPlainText(), textEditor->toHtml())); });

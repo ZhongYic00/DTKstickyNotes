@@ -19,7 +19,8 @@ void StickyWidget::initWidgets() {
 	editor = new ZTextEdit(this, false);
 	{ // init editor
 		editor->viewport()->setAttribute(Qt::WA_TranslucentBackground);
-		//        editor->setAttribute(Qt::WA_TranslucentBackground);
+		editor->setTopMargin(20);
+		editor->setBottomMargin(50);
 		connect(editor, &ZTextEdit::textChanged, [this]() {
 			note.setHtml(editor->toHtml());
 			note.setOverview(editor->toPlainText());
@@ -56,7 +57,7 @@ void StickyWidget::initWidgets() {
 	topLayout->addLayout(toolBarLayout);
 	topLayer->setLayout(topLayout);
 
-	bottomLayout->addSpacing(10);
+	//	bottomLayout->addSpacing(10);
 	bottomLayout->addWidget(editor);
 	bottomLayer->setLayout(bottomLayout);
 
