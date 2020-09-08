@@ -46,6 +46,7 @@ class ZTextEdit : public DTextEdit {
 	void initResources();
 	QImage processImage(const QByteArray &data);
 	void updateResources();
+	void updateResourcesList(const QString &html);
 
 	QTextCharFormat sample;
 	QStringList resources;

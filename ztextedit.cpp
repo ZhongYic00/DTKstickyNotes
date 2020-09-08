@@ -89,6 +89,8 @@ void ZTextEdit::insertFromMimeData(const QMimeData *src) {
 		}
 		setCurrentCharFormat(bak);
 		cursor.endEditBlock();
+		updateResourcesList(toHtml());
+		updateResources();
 	}
 }
 
@@ -215,17 +217,7 @@ void ZTextEdit::updateCharFormat(const QTextCharFormat &nwfmt) {
 }
 void ZTextEdit::setHtml(const QString &html) {
 	qDebug() << "call ZTextEdit::setHtml";
-	QRegExp reg("src=\"([^>]*==)\"");
-	resources.clear();
-	int from = 0;
-	while ((from = reg.indexIn(html, from)) != -1) {
-		qDebug() << "captured url" << reg.cap(1);
-		resources.append(reg.cap(1));
-		from += reg.matchedLength();
-	}
-	auto lst = std::unique(resources.begin(), resources.end());
-	resources.erase(lst, resources.end());
-	qDebug() << lst - resources.begin() << "resources in total captured";
+	updateResourcesList(html);
 	updateResources();
 	DTextEdit::setHtml(html);
 	updateDocumentFormat();
@@ -270,4 +262,17 @@ void ZTextEdit::updateResources() {
 	for (auto i : resources) {
 		document()->addResource(QTextDocument::ImageResource, "" + i, processImage(Daemon::instance()->fetchImageData(i)));
 	}
+}
+void ZTextEdit::updateResourcesList(const QString &html) {
+	QRegExp reg("src=\"([^>]*==)\"");
+	resources.clear();
+	int from = 0;
+	while ((from = reg.indexIn(html, from)) != -1) {
+		qDebug() << "captured url" << reg.cap(1);
+		resources.append(reg.cap(1));
+		from += reg.matchedLength();
+	}
+	auto lst = std::unique(resources.begin(), resources.end());
+	resources.erase(lst, resources.end());
+	qDebug() << lst - resources.begin() << "resources in total captured";
 }

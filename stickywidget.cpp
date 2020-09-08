@@ -113,6 +113,7 @@ QWidget *StickyWidget::initToolBar(QWidget *parent, ZTextEdit *textEditor) {
 void StickyWidget::setNote(ZNote &d) {
 	note = d;
 	editor->setHtml(d.getHtml());
+	editor->moveCursor(QTextCursor::End);
 }
 ZNote StickyWidget::getNote() {
 	return note;
