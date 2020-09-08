@@ -2,11 +2,11 @@
 #include "editor.h"
 
 DGUI_USE_NAMESPACE
-ZList::ZList(Daemon *d, QWidget *parent) : QWidget(parent), daemon(d), haveChange(false) {
+ZList::ZList(QWidget *parent) : QWidget(parent), haveChange(false) {
 	//    qDebug()<<curIdx;
 	listview = new ZListView(this);
 	model = new QSortFilterProxyModel(this);
-	model->setSourceModel(daemon->getModel());
+	model->setSourceModel(Daemon::instance()->getModel());
 	model->setFilterRole(ZListModel::DisplayType);
 	model->setFilterFixedString("attach");
 
@@ -81,14 +81,14 @@ QLayout *ZList::initAddLayer() {
 }
 void ZList::addItem(const ZNote &item) {
 	//    qDebug()<<"model->rowCount()"<<model->rowCount();
-	daemon->addItem(item);
+	Daemon::instance()->addItem(item);
 	auto i = model->index(0, 0);
 	//    qDebug()<<"model->rowCount()"<<model->rowCount();
 	listview->setCurrentIndex(i);
 	emit currentChanged(i);
 }
 void ZList::removeItems(const QList<ZNote> &items) {
-	daemon->removeItems(items);
+	Daemon::instance()->removeItems(items);
 }
 void ZList::setCurrentOverview(const QString &overview) {
 	haveChange = true;
@@ -103,7 +103,7 @@ void ZList::setCurrentHtml(const QString &html) {
 void ZList::commitChange(bool trace) //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit
 {
 	haveChange = false;
-	curIdx = daemon->commitChange(curIdx, false);
+	curIdx = Daemon::instance()->commitChange(curIdx, false);
 	if (trace)
 		listview->setCurrentIndex(model->index(0, 0));
 }
@@ -111,7 +111,7 @@ void ZList::popupMenu(const QPoint &pos) {
 	auto selection = listview->selectionNotes();
 	QMenu *menu = new QMenu();
 	QAction *removeAction = new QAction(QIcon(":/images/trash-empty"), tr("删除"), menu);
-	auto indexOf = [=](InnerIndex &idx) { return this->model->mapFromSource(daemon->getModel()->indexOf(idx)); };
+	auto indexOf = [=](InnerIndex &idx) { return this->model->mapFromSource(Daemon::instance()->getModel()->indexOf(idx)); };
 	connect(removeAction, &QAction::triggered, [&selection, this, &indexOf]() {
 		listview->clearSelectionExt();
 		removeItems(selection);
@@ -123,7 +123,7 @@ void ZList::popupMenu(const QPoint &pos) {
 		auto index = listview->selection()[0];
 		connect(detachAction, &QAction::triggered, [index, this, &indexOf]() {
 			listview->clearSelectionExt();
-			daemon->detach(index.data(ZListModel::UpdateTime).value<QDateTime>());
+			Daemon::instance()->detach(index.data(ZListModel::UpdateTime).value<QDateTime>());
 			listview->setCurrentIndex(indexOf(curIdx));
 		});
 		menu->addAction(detachAction);

@@ -1,19 +1,34 @@
 #ifndef BACKEND_H
 #define BACKEND_H
-#include <QtCore>
 #include "znote.h"
+#include <QtCore>
 
-class ZBackend
-{
-public:
-    ZBackend();
-    ~ZBackend();
-    QList<ZNote> getSavedDataList() const;
-    void save(const QList<ZNote> &src);
-private:
-    QJsonDocument exportAsJson(const QList<ZNote> &src);
-    inline QString storageFileName() const;
-    inline QString readWholeFile(const QString &filename) const;
+class ZBackend {
+	public:
+	enum Files { MainFile, BackupFile, ConfigFile, MediaFile, MediaSourceFile };
+	ZBackend();
+	~ZBackend();
+	QList<ZNote> getSavedDataList() const;
+	void save();
+	void saveMainFile(const QList<ZNote> &src);
+	QString insertImage(const QUrl &file);
+	QString insertImage(const QByteArray &data);
+	QByteArray queryImage(const QString &hash);
+
+	private:
+	int mediaSourceId;
+	QHash<QByteArray, QString> media; // key refers to hash value of the file, value refers to relative path of media source file
+
+	void initMedia();
+	inline int generateFileID();
+
+	static inline void initPath();
+	static inline QByteArray calcFileMd5(const QString &filename);
+	static inline QString readWholeFile(const QString &filename);
+	static inline QJsonDocument exportAsJson(const QList<ZNote> &src);
+	static inline QString storageFileName(int type = MainFile);
+	static inline QString storageFileFullName(int type = MainFile);
+	static inline QString storagePath(int type = MainFile);
 };
 
 #endif // BACKEND_H

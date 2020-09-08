@@ -11,9 +11,9 @@ int main(int argc, char *argv[]) {
 	app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 	if (!app.setSingleInstance("DStickyNotes-develop"))
 		return 0;
-	app.setProductName("深度便笺");
+	app.setProductName("便笺");
 	app.setProductIcon(QIcon(":/images/logo.svg.png"));
-	app.setOrganizationName("Rubbishtech Co.,Ltd");
+	app.setOrganizationName("RubbishTech");
 
 	Systemtray tray(&app);
 	tray.show();

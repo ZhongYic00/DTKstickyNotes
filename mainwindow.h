@@ -2,41 +2,41 @@
 #define MAINWINDOW_H
 
 #include <DMainWindow>
-#include <DTitlebar>
 #include <DSearchEdit>
 #include <DTabBar>
-#include <QtWidgets>
+#include <DTitlebar>
 #include <QDebug>
+#include <QtWidgets>
 
+#include "daemon.h"
 #include "editor.h"
-#include "zlist.h"
 #include "searchwidget.h"
 #include "stickywidget.h"
-#include "daemon.h"
+#include "zlist.h"
 
 DWIDGET_USE_NAMESPACE
 
-class MainWindow : public DMainWindow
-{
-    Q_OBJECT
+class MainWindow : public DMainWindow {
+	Q_OBJECT
 
-public:
-    explicit MainWindow(Daemon *daemon, QWidget *parent = nullptr);
-    ~MainWindow();
-public slots:
-    void save();
-protected:
-    void closeEvent(QCloseEvent *e);
-private:
-    Daemon *daemon;
-    QHBoxLayout *mainLayout;
-    ZList *notesListView;
-    Editor *noteEditView;
-    bool modified;  //records changes to any item
+	public:
+	explicit MainWindow(QWidget *parent = nullptr);
+	~MainWindow();
+	public slots:
+	void save();
 
-    void display(const QModelIndex &item);
-    void reset();
-    void initNotesListView();
+	protected:
+	void closeEvent(QCloseEvent *e);
+
+	private:
+	QHBoxLayout *mainLayout;
+	ZList *notesListView;
+	Editor *noteEditView;
+	bool modified; // records changes to any item
+
+	void display(const QModelIndex &item);
+	void reset();
+	void initNotesListView();
 };
 
 #endif // MAINWINDOW_H

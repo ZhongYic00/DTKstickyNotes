@@ -15,7 +15,7 @@ class ZTextEdit : public DTextEdit {
 	void fLinethrough(bool);
 	void fUrl(bool);
 	void pSplitline();
-	void pInsImage();
+	void pInsImage(const QVariant &data = QVariant());
 	void pInsUrl(bool);
 	void pInsList();
 	void pInsOrderedList();
@@ -37,17 +37,24 @@ class ZTextEdit : public DTextEdit {
 	void keyReleaseEvent(QKeyEvent *);
 	void mouseReleaseEvent(QMouseEvent *);
 	void insertFromMimeData(const QMimeData *);
+	void resizeEvent(QResizeEvent *);
 	bool event(QEvent *e);
 
 	private:
 	void fEdit(QTextCharFormat &);
 	void updateDocumentFormat();
+	void initResources();
+	QImage processImage(const QByteArray &data);
+	void updateResources();
+
 	QTextCharFormat sample;
+	QStringList resources;
 	bool ctrlPressed;
 	bool editing;
 	bool hackDStyle;
 	int marginBottom;
 	int marginTop;
+	const double ImagePercentage = 0.95;
 };
 
 #endif // ZTEXTEDIT_H

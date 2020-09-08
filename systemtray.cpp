@@ -22,7 +22,7 @@ Systemtray::Systemtray(QObject *parent) : QSystemTrayIcon(parent) {
 
 	{ // init application
 		daemon = new Daemon(this);
-		win = new MainWindow(daemon);
+		win = new MainWindow;
 		Dtk::Widget::moveToCenter(win);
 		win->show();
 	}

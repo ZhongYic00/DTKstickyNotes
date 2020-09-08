@@ -1,4 +1,5 @@
 #include "ztextedit.h"
+#include "daemon.h"
 #include "mdialog.h"
 #include <DGuiApplicationHelper>
 #include <DInputDialog>
@@ -43,9 +44,10 @@ bool ZTextEdit::event(QEvent *e) {
 
 void ZTextEdit::insertFromMimeData(const QMimeData *src) {
 	qDebug() << src->formats();
+	qDebug() << src->html();
 	if (!src->hasHtml() && src->hasImage()) {
 		qDebug() << "insert image detected";
-		DTextEdit::insertFromMimeData(src);
+		pInsImage(src->imageData());
 	} else {
 		qDebug() << "insert html detected";
 		auto cursor = textCursor();
@@ -138,11 +140,27 @@ void ZTextEdit::pSplitline() {
 	cursor.deletePreviousChar();
 	cursor.endEditBlock();
 }
-void ZTextEdit::pInsImage() {
+void ZTextEdit::pInsImage(const QVariant &data) {
+	//	qDebug() << size() << sizeHint();
 	auto cursor = textCursor();
-	auto imageName = QFileDialog::getOpenFileName(this, "", "", "Images(*.jpg *.png *.svg *.tif *.bmp)");
-	//    cursor.insertImage(QImage(imageName));
-	cursor.insertHtml("<img src=\"" + imageName + "\" alt=\"" + imageName + "\"/>");
+	QString imgHash;
+	if (data.type() != QVariant::Image) {
+		auto imageName = QFileDialog::getOpenFileName(this, "", "", "Images(*.jpg *.png *.svg *.tif *.bmp)");
+		if (imageName.isEmpty())
+			return;
+		imgHash = Daemon::instance()->calcImageHash(QUrl::fromLocalFile(imageName));
+	} else {
+		QByteArray dataRaw;
+		QBuffer buffer(&dataRaw);
+		buffer.open(QIODevice::WriteOnly);
+		data.value<QImage>().save(&buffer, "PNG");
+		imgHash = Daemon::instance()->calcImageHash(dataRaw);
+	}
+	if (!resources.contains(imgHash))
+		resources.append(imgHash);
+	document()->addResource(QTextDocument::ImageResource, QUrl("" + imgHash),
+							QVariant(processImage(Daemon::instance()->fetchImageData(imgHash))));
+	cursor.insertHtml("<img src=\"" + imgHash + "\"/>");
 }
 void ZTextEdit::pInsUrl(bool b) {
 	if (!b)
@@ -196,6 +214,19 @@ void ZTextEdit::updateCharFormat(const QTextCharFormat &nwfmt) {
 	emit pIsUrl(nwfmt.isAnchor());
 }
 void ZTextEdit::setHtml(const QString &html) {
+	qDebug() << "call ZTextEdit::setHtml";
+	QRegExp reg("src=\"([^>]*==)\"");
+	resources.clear();
+	int from = 0;
+	while ((from = reg.indexIn(html, from)) != -1) {
+		qDebug() << "captured url" << reg.cap(1);
+		resources.append(reg.cap(1));
+		from += reg.matchedLength();
+	}
+	auto lst = std::unique(resources.begin(), resources.end());
+	resources.erase(lst, resources.end());
+	qDebug() << lst - resources.begin() << "resources in total captured";
+	updateResources();
 	DTextEdit::setHtml(html);
 	updateDocumentFormat();
 }
@@ -215,4 +246,28 @@ void ZTextEdit::updateDocumentFormat() {
 	fmt.setBottomMargin(marginBottom);
 	fmt.setTopMargin(marginTop);
 	document()->rootFrame()->setFrameFormat(fmt);
+}
+QImage ZTextEdit::processImage(const QByteArray &data) {
+	QImage img = QImage::fromData(data);
+	double ori = double(img.width()) / img.height(), view = double(size().width()) / size().height();
+	if (ori > view) {
+		if (size().width() < img.width())
+			return img.scaledToWidth(int(size().width() * ImagePercentage));
+		else
+			return img;
+	} else {
+		if (size().height() < img.height())
+			return img.scaledToHeight(int(size().height() * ImagePercentage));
+		else
+			return img;
+	}
+}
+void ZTextEdit::resizeEvent(QResizeEvent *e) {
+	updateResources();
+	DTextEdit::resizeEvent(e);
+}
+void ZTextEdit::updateResources() {
+	for (auto i : resources) {
+		document()->addResource(QTextDocument::ImageResource, "" + i, processImage(Daemon::instance()->fetchImageData(i)));
+	}
 }
