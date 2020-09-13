@@ -56,7 +56,7 @@ ZListModel *Daemon::getModel() {
 }
 void Daemon::save() {
 	back->saveMainFile(model->exportAll());
-	back->save();
+	back->saveMediaFile();
 }
 QObject *Daemon::systemTray() {
 	return parent();

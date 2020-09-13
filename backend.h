@@ -9,7 +9,7 @@ class ZBackend {
 	ZBackend();
 	~ZBackend();
 	QList<ZNote> getSavedDataList() const;
-	void save();
+	void saveMediaFile();
 	void saveMainFile(const QList<ZNote> &src);
 	QString insertImage(const QUrl &file);
 	QString insertImage(const QByteArray &data);

@@ -6,7 +6,7 @@ ZBackend::ZBackend() : mediaSourceId(0) {
 }
 ZBackend::~ZBackend() {
 	qDebug() << "call ZBackend::~ZBackend()";
-	save();
+	saveMediaFile();
 }
 void ZBackend::initPath() { // now just implemented mainfile
 	qDebug() << "call ZBackend::initPath";
@@ -44,7 +44,7 @@ void ZBackend::initMedia() {
 	//	qDebug() << calcFileMd5("/home/zyc/Pictures/Wallpapers/灵笼/8ae42dc968d807969365c4f0607275afa4439057.png").toBase64();
 	list.close();
 }
-void ZBackend::save() {
+void ZBackend::saveMediaFile() {
 	QFile output(storageFileFullName(MediaFile));
 	output.open(QFile::WriteOnly | QFile::Text);
 	QTextStream outputStream(&output);
@@ -55,11 +55,13 @@ void ZBackend::save() {
 	output.close();
 }
 void ZBackend::saveMainFile(const QList<ZNote> &src) { //下一步实现双文件储存，防数据遗失
-	QFile output(storageFileFullName());
-	output.open(QFile::WriteOnly | QFile::Text);
-	QTextStream outputStream(&output);
+	QFile outputTemp(storagePath() + '~' + storageFileName());
+	//	QFile output(storageFileFullName());
+	outputTemp.open(QFile::WriteOnly | QFile::Text);
+	QTextStream outputStream(&outputTemp);
 	outputStream << exportAsJson(src).toJson(QJsonDocument::Compact);
-	output.close();
+	outputTemp.close();
+	outputTemp.copy(storageFileFullName());
 }
 inline int ZBackend::generateFileID() {
 	return ++mediaSourceId;
