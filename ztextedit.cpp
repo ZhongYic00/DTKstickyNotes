@@ -162,7 +162,13 @@ void ZTextEdit::pInsImage(const QVariant &data) {
 		resources.append(imgHash);
 	document()->addResource(QTextDocument::ImageResource, QUrl("" + imgHash),
 							QVariant(processImage(Daemon::instance()->fetchImageData(imgHash))));
+	QTextBlockFormat fmt;
+	fmt.setAlignment(Qt::AlignCenter);
+	cursor.insertText("\n");
+	cursor.movePosition(QTextCursor::Up);
+	cursor.insertBlock(fmt);
 	cursor.insertHtml("<img src=\"" + imgHash + "\"/>");
+	cursor.movePosition(QTextCursor::NextBlock);
 }
 void ZTextEdit::pInsUrl(bool b) {
 	if (!b)
@@ -196,9 +202,12 @@ void ZTextEdit::pInsCode() {
 	cursor.beginEditBlock();
 	QTextFrameFormat framefmt;
 	framefmt.setBorder(2);
-	cursor.insertFrame(framefmt);
+	auto frame = cursor.insertFrame(framefmt);
 	cursor.insertText(DInputDialog::getMultiLineText(this, "Enter Your Code", "code"));
+	cursor.movePosition(QTextCursor::PreviousBlock);
+	//	cursor.setPosition(frame->lastPosition() + 1);
 	cursor.endEditBlock();
+	cursor.setPosition(document()->rootFrame()->firstPosition());
 }
 QString ZTextEdit::getUrlString() {
 	auto res = mDialog::getMultiText("Enter the Url", QList<QString>({ "name", "url" }));
@@ -260,11 +269,11 @@ void ZTextEdit::resizeEvent(QResizeEvent *e) {
 }
 void ZTextEdit::updateResources() {
 	for (auto i : resources) {
-		document()->addResource(QTextDocument::ImageResource, "" + i, processImage(Daemon::instance()->fetchImageData(i)));
+		document()->addResource(QTextDocument::ImageResource, "" + i, (processImage(Daemon::instance()->fetchImageData(i))));
 	}
 }
 void ZTextEdit::updateResourcesList(const QString &html) {
-	QRegExp reg("src=\"([^>]*==)\"");
+	QRegExp reg("<img src=\"([^>]*==)\"");
 	resources.clear();
 	int from = 0;
 	while ((from = reg.indexIn(html, from)) != -1) {
