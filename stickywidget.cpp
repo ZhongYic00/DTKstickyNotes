@@ -5,7 +5,7 @@ StickyWidget::StickyWidget(QObject *parent) {
 	setBlendMode(DBlurEffectWidget::BehindWindowBlend);
 	setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
 	initWidgets();
-	setMinimumSize(QSize(400, 400));
+	setMinimumSize(QSize(320, 320));
 	move(QCursor::pos());
 }
 void StickyWidget::initWidgets() {
@@ -33,7 +33,7 @@ void StickyWidget::initWidgets() {
 		auto attachButton = new DIconButton(this);
 		attachButton->setFlat(true);
 		attachButton->setIcon(QIcon(":/images/attach"));
-		attachButton->setIconSize(QSize(30, 35));
+		attachButton->setIconSize(QSize(25, 30));
 		connect(attachButton, &DIconButton::clicked, [this]() {
 			note.toggleAttach();
 			emit this->attach();
