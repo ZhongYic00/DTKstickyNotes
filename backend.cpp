@@ -55,13 +55,15 @@ void ZBackend::saveMediaFile() {
 	output.close();
 }
 void ZBackend::saveMainFile(const QList<ZNote> &src) { //下一步实现双文件储存，防数据遗失
+	qDebug() << "saving mainfile...";
 	QFile outputTemp(storagePath() + '~' + storageFileName());
 	//	QFile output(storageFileFullName());
 	outputTemp.open(QFile::WriteOnly | QFile::Text);
 	QTextStream outputStream(&outputTemp);
 	outputStream << exportAsJson(src).toJson(QJsonDocument::Compact);
 	outputTemp.close();
-	outputTemp.copy(storageFileFullName());
+	QFile::remove(storageFileFullName());
+	QFile::copy(storagePath() + '~' + storageFileName(), storageFileFullName());
 }
 inline int ZBackend::generateFileID() {
 	return ++mediaSourceId;
