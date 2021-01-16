@@ -1,214 +1,230 @@
-#include <bits/stdc++.h>
 #include <QDebug>
-template<typename T>
-class Treap
-{
-    enum constNumbers{P_INF=2147483647,N_INF=1<<31};
-    struct Node
-    {
-        std::shared_ptr<T> key;
-        int prio,tSize;
-        Node *ch[2];
-        Node(T &value)
+#include <bits/stdc++.h>
+template <typename ValueType>
+class Treap {
+    enum constNumbers { P_INF = INT_MAX,
+        N_INF = INT_MIN };
+    struct Node {
+        std::shared_ptr<ValueType> key;
+        int prio, tSize;
+        Node* ch[2];
+        Node(const ValueType& value)
         {
-            key=std::make_shared<T>(value);
-            prio=random();
-            ch[0]=ch[1]=nullptr;
-            tSize=1;
+            key = std::make_shared<ValueType>(value);
+            prio = random();
+            ch[0] = ch[1] = nullptr;
+            tSize = 1;
         }
         ~Node()
         {
             key.reset();
         }
-        inline void maintain(){tSize=(ch[0]?ch[0]->tSize:0)+(ch[1]?ch[1]->tSize:0)+1;}
-//        inline void reverse(){rev^=1,swap(ch[0],ch[1]);}
-//        inline void pushdown(){if(rev){if(ch[0])ch[0]->reverse();if(ch[1])ch[1]->reverse();rev=false;}}
+        inline void maintain() { tSize = (ch[0] ? ch[0]->tSize : 0) + (ch[1] ? ch[1]->tSize : 0) + 1; }
+        //        inline void reverse(){rev^=1,swap(ch[0],ch[1]);}
+        //        inline void pushdown(){if(rev){if(ch[0])ch[0]->reverse();if(ch[1])ch[1]->reverse();rev=false;}}
         void print()
         {
-//            pushdown();
-            if(ch[0])ch[0]->print();
-            key->print();
-            if(ch[1])ch[1]->print();
+            //            pushdown();
+            if (ch[0])
+                ch[0]->print();
+            qDebug() << key << ' ';
+            if (ch[1])
+                ch[1]->print();
         }
-        std::list<T> goThrough()
+        std::list<ValueType> collect()
         {
-            std::list<T> m({*(key.get())}),l,r;
-            if(ch[0])l=ch[0]->goThrough();
-            if(ch[1])r=ch[1]->goThrough();
-            m.splice(m.end(),r);
-            l.splice(l.end(),m);
+            std::list<ValueType> m({ *(key.get()) }), l, r;
+            if (ch[0])
+                l = ch[0]->collect();
+            if (ch[1])
+                r = ch[1]->collect();
+            m.splice(m.end(), r);
+            l.splice(l.end(), m);
             return l;
         }
     };
     typedef Node* tree;
+
 public:
-    Treap():root(nullptr){}
+    Treap()
+        : root(nullptr)
+    {
+    }
     ~Treap()
     {
-        srand(time(NULL));
+        srand(time(nullptr));
     }
-    void insert(T value)
+    void insert(const ValueType& value)
     {
-//        qDebug()<<"insert"<<value.getOverview();
-        tree few,more,cur=new Node(value);
-        split(root,value,few,more);
-        root=merge(few,merge(cur,more));
+        //        qDebug()<<"insert"<<value.getOverview();
+        tree few, more, cur = new Node(value);
+        split(root, value, few, more);
+        root = merge(few, merge(cur, more));
     }
-    void erase(T value)
+    void erase(const ValueType& value)
     {
-        tree few,more,cur;
-        split(root,value,few,more);
-        upper_split(few,value,few,cur);
+        tree few, more, cur;
+        split(root, value, few, more);
+        upper_split(few, value, few, cur);
         delete cur;
-        root=merge(few,more);
+        root = merge(few, more);
     }
-    T getKth(int k) const
+    ValueType getKth(const int& k) const
     {
-        return getKth(root,k);
+        return getKth(root, k);
     }
-    template<typename T1>
-    T getKth(T1 k) const
+    inline ValueType getKth(const ValueType& k) const
     {
-        return getKth(root,k);
+        return getKth(root, k);
     }
-    template<typename T1>
-    int queryIndex(T1 k)
+    int queryIndex(const ValueType& k)
     {
-//        qDebug()<<"Treap::root="<<root;
-        return queryIndex(root,k);
+        //        qDebug()<<"Treap::root="<<root;
+        return queryIndex(root, k);
     }
-    template<typename F>
-    void modifyKth(int k, F function)
+    template <typename F>
+    void modifyKth(int k, const F& modifier)
     {
-        modifyKth(root, k, function);
+        modifyKth(root, k, modifier);
     }
-    template<typename T1, typename F>
-    void modifyKth(T1 k, F function)
+    template <typename F>
+    void modifyKth(const ValueType& k, const F& modifier)
     {
-        modifyKth(root, k, function);
+        modifyKth(root, k, modifier);
     }
     int size() const
     {
-        return root?root->tSize:0;
+        return root ? root->tSize : 0;
     }
-    std::list<T> getAll() const
+    std::list<ValueType> getAll() const
     {
-        return root?root->goThrough():std::list<T>();
+        return root ? root->collect() : std::list<ValueType>();
     }
+#ifndef RELEASE
     int depth()
     {
-        return root?depth(root):0;
+        return root ? depth(root) : 0;
     }
-    int depth(tree t,int d=0)
+    int depth(tree t, int d = 0)
     {
         d++;
-        int rt=d;
-        if(t->ch[0])rt=std::max(rt,depth(t->ch[0],d));
-        if(t->ch[1])rt=std::max(rt,depth(t->ch[1],d));
+        int rt = d;
+        if (t->ch[0])
+            rt = std::max(rt, depth(t->ch[0], d));
+        if (t->ch[1])
+            rt = std::max(rt, depth(t->ch[1], d));
         return rt;
     }
+#endif
+
 private:
-    int seed=10007;
+    int seed = 10007;
     tree root;
     static int random()
     {
         return rand();
     }
-    void split(tree t,int jud,tree &l,tree &r)
+    void split(const tree& t, const int& jud, tree& l, tree& r)
     {
-        if(!t)return (void)(l=r=nullptr);
-        int lsize=t->ch[0]?(t->ch[0]->tSize+1):1;
-        if(lsize<=jud)
-            l=t,split(t->ch[1],jud-lsize,t->ch[1],r);
+        if (!t)
+            return (void)(l = r = nullptr);
+        int lsize = t->ch[0] ? (t->ch[0]->tSize + 1) : 1;
+        if (lsize <= jud)
+            l = t, split(t->ch[1], jud - lsize, t->ch[1], r);
         else
-            r=t,split(t->ch[0],jud,l,t->ch[0]);
+            r = t, split(t->ch[0], jud, l, t->ch[0]);
         t->maintain();
     }
-    void split(tree t,T &jud,tree &l,tree &r)// split whatever greater than jud into right subTree
+    void split(const tree& t, const ValueType& jud, tree& l, tree& r) // split whatever greater than jud into right subTree
     {
-        if(!t)return (void)(l=r=nullptr);
-        if(*(t->key)<=jud)
-            l=t,split(t->ch[1],jud,t->ch[1],r);
+        if (!t)
+            return (void)(l = r = nullptr);
+        if (t->key->operator<=(jud))
+            l = t, split(t->ch[1], jud, t->ch[1], r);
         else
-            r=t,split(t->ch[0],jud,l,t->ch[0]);
+            r = t, split(t->ch[0], jud, l, t->ch[0]);
         t->maintain();
     }
-    void upper_split(tree t,T &jud,tree &l,tree &r)// split whatever smaller than jud into left subTree
+    void upper_split(const tree& t, const ValueType& jud, tree& l, tree& r) // split whatever smaller than jud into left subTree
     {
-        if(!t)return (void)(l=r=nullptr);
-        if(*(t->key)<jud)
-            l=t,upper_split(t->ch[1],jud,t->ch[1],r);
+        if (!t)
+            return (void)(l = r = nullptr);
+        if (t->key->operator<(jud))
+            l = t, upper_split(t->ch[1], jud, t->ch[1], r);
         else
-            r=t,upper_split(t->ch[0],jud,l,t->ch[0]);
+            r = t, upper_split(t->ch[0], jud, l, t->ch[0]);
         t->maintain();
     }
-    T getKth(tree t,int k) const
+    ValueType getKth(const tree& t, const int& k) const
     {
-        if(!t)return T();
-        int lsize=1+(t->ch[0]?t->ch[0]->tSize:0);
-        if(lsize<k)
-            return getKth(t->ch[1],k-lsize);
-        else if(lsize==k)
+        if (!t)
+            return ValueType();
+        int lsize = 1 + (t->ch[0] ? t->ch[0]->tSize : 0);
+        if (lsize < k)
+            return getKth(t->ch[1], k - lsize);
+        else if (lsize == k)
             return *(t->key);
         else
-            return getKth(t->ch[0],k);
+            return getKth(t->ch[0], k);
     }
-    template<typename T1>
-    T getKth(tree t, T1 k) const
+    ValueType getKth(const tree& t, const ValueType& k) const
     {
-        if(!t)return T();
-        if(*t->key<k)
-            return getKth(t->ch[1],k);
-        else if(*t->key>k)
-            return getKth(t->ch[0],k);
+        if (!t)
+            return ValueType();
+        if (*t->key < k)
+            return getKth(t->ch[1], k);
+        else if (*t->key > k)
+            return getKth(t->ch[0], k);
         else
             return *(t->key);
     }
-    template<typename T1>
-    int queryIndex(tree t, T1 k)
+    int queryIndex(const tree& t, const ValueType& k)
     {
-//        qDebug()<<"Treap::queryIndex("<<t<<")";
-//        qDebug()<<t->key->getUpdateTimeRaw();
-        if(!t) return 0;
-        if(*t->key<k)
-            return queryIndex(t->ch[1],k)+(1+(t->ch[0]?t->ch[0]->tSize:0));
-        else if(*t->key>k)
-            return queryIndex(t->ch[0],k);
+        //        qDebug()<<"Treap::queryIndex("<<t<<")";
+        //        qDebug()<<t->key->getUpdateTimeRaw();
+        if (!t)
+            return 0;
+        if (*t->key < k)
+            return queryIndex(t->ch[1], k) + (1 + (t->ch[0] ? t->ch[0]->tSize : 0));
+        else if (*t->key > k)
+            return queryIndex(t->ch[0], k);
         else
-            return (1+(t->ch[0]?t->ch[0]->tSize:0));
+            return (1 + (t->ch[0] ? t->ch[0]->tSize : 0));
     }
-    template<typename F>
-    void modifyKth(tree t,int k,F func)
+    template <typename F>
+    void modifyKth(const tree& t, const int& k, const F& modifier)
     {
-        if(!t) return ;
-        int lsize=1+(t->ch[0]?t->ch[0]->tSize:0);
-        if(lsize<k)
-            modifyKth(t->ch[1],k-lsize,func);
-        else if(lsize==k)
-            func(t->key.get());
+        if (!t)
+            return;
+        int lsize = 1 + (t->ch[0] ? t->ch[0]->tSize : 0);
+        if (lsize < k)
+            modifyKth(t->ch[1], k - lsize, modifier);
+        else if (lsize == k)
+            modifier(t->key.get());
         else
-            modifyKth(t->ch[0],k,func);
+            modifyKth(t->ch[0], k, modifier);
     }
-    template<typename T1,typename F>
-    void modifyKth(tree t, T1 k, F func)
+    template <typename F>
+    void modifyKth(const tree& t, const ValueType& k, const F& func)
     {
-        if(!t) return ;
-        if(*t->key<k)
+        if (!t)
+            return;
+        if (*t->key < k)
             modifyKth(t->ch[1], k, func);
-        else if(*t->key>k)
-            modifyKth(t->ch[0],k,func);
+        else if (*t->key > k)
+            modifyKth(t->ch[0], k, func);
         else
             func(t->key.get());
     }
-    tree merge(tree l,tree r)
+    tree merge(const tree& l, const tree& r)
     {
-        if(!l||!r)
-            return l?l:r;
+        if (!l || !r)
+            return l ? l : r;
         tree rt;
-        if(l->prio<r->prio)
-            rt=l,l->ch[1]=merge(l->ch[1],r);
+        if (l->prio < r->prio)
+            rt = l, l->ch[1] = merge(l->ch[1], r);
         else
-            rt=r,r->ch[0]=merge(l,r->ch[0]);
+            rt = r, r->ch[0] = merge(l, r->ch[0]);
         rt->maintain();
         return rt;
     }

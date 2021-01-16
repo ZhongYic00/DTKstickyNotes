@@ -22,7 +22,7 @@ class ZTextEdit : public DTextEdit {
 	void pInsCode();
 	QString getUrlString();
 	void updateCharFormat(const QTextCharFormat &);
-	void setHtml(const QString &html);
+	void setHtml(QString html);
 	void setBottomMargin(int d);
 	void setTopMargin(int d);
 	signals:
@@ -46,7 +46,7 @@ class ZTextEdit : public DTextEdit {
 	void initResources();
 	QImage processImage(const QByteArray &data);
 	void updateResources();
-	void updateResourcesList(const QString &html);
+	void updateResourcesList(QString &html);
 
 	QTextCharFormat sample;
 	QStringList resources;

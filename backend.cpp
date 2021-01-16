@@ -3,6 +3,7 @@
 ZBackend::ZBackend() : mediaSourceId(0) {
 	initPath();
 	initMedia();
+	netManager = new QNetworkAccessManager;
 }
 ZBackend::~ZBackend() {
 	qDebug() << "call ZBackend::~ZBackend()";
@@ -168,4 +169,14 @@ inline QByteArray ZBackend::calcFileMd5(const QString &filename) {
 	QFile file(filename);
 	file.open(QIODevice::ReadOnly);
 	return QCryptographicHash::hash(file.readAll(), QCryptographicHash::Md5);
+}
+QByteArray ZBackend::download(const QString &url) {
+	auto loop = new QEventLoop;
+	QNetworkReply *reply = netManager->get(QNetworkRequest(QUrl(url)));
+	//	qDebug() << reply->url();
+	QObject::connect(reply, &QNetworkReply::finished, loop, &QEventLoop::quit);
+	loop->exec();
+	reply->deleteLater();
+	auto rt = reply->readAll();
+	return rt;
 }

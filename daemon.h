@@ -7,44 +7,45 @@
 #include <QObject>
 
 class Daemon : public QObject {
-	Q_OBJECT
-	public:
-	Daemon(QObject *parent = nullptr);
-	~Daemon() override;
-	void addItem(const ZNote &item);
-	void addItems(const QList<ZNote> &items);
-	void removeItem(const ZNote &item);
-	void removeItems(const QList<ZNote> &items);
-	void setHtml(const QDateTime &idx, const QString &html);
-	void setOverview(const QDateTime &idx, const QString &overview);
-	void commitChange(const QModelIndex &index, bool toggleAttach);
-	QDateTime commitChange(const QDateTime &idx, bool toggleAttach);
-	ZListModel *getModel();
-	QList<ZNote> getDataList() const;
-	QList<QPair<QString, QString>> getResourceList() const;
-	void save();
-	QObject *systemTray();
-	void attach(InnerIndex idx);
-	void detach(InnerIndex idx);
-	QString calcImageHash(const QUrl &fileUrl);
-	QString calcImageHash(const QByteArray &data);
-	QByteArray fetchImageData(const QString &hash);
+    Q_OBJECT
+public:
+    Daemon(QObject* parent = nullptr);
+    ~Daemon() override;
+    void addItem(const ZNote& item);
+    void addItems(const QList<ZNote>& items);
+    void removeItem(const ZNote& item);
+    void removeItems(const QList<ZNote>& items);
+    void setHtml(const InnerIndex& idx, const QString& html);
+    void setOverview(const InnerIndex& idx, const QString& overview);
+    void commitChange(const QModelIndex& index, bool toggleAttach);
+    InnerIndex commitChange(const InnerIndex& idx, bool toggleAttach);
+    ZListModel* getModel();
+    QList<ZNote> getDataList() const;
+    QList<QPair<QString, QString>> getResourceList() const;
+    void save();
+    QObject* systemTray();
+    void attach(InnerIndex idx);
+    void detach(InnerIndex idx);
+    QString calcImageHash(const QUrl& fileUrl);
+    QString calcImageHash(const QByteArray& data);
+    QByteArray fetchImageData(const QString& hash);
+    QByteArray fetchRemoteResource(const QString& url);
 
-	static Daemon *instance();
-	signals:
-	void activationChanged(QObject *obj);
-	void gainActivation(QWidget *obj);
-	void lostActivation(QWidget *obj);
-	void itemDetached(InnerIndex idx);
+    static Daemon* instance();
+signals:
+    void activationChanged(QObject* obj);
+    void gainActivation(QWidget* obj);
+    void lostActivation(QWidget* obj);
+    void itemDetached(InnerIndex idx);
 
-	protected:
-	static Daemon *daemon;
+protected:
+    static Daemon* daemon;
 
-	bool eventFilter(QObject *obj, QEvent *e) override;
+    bool eventFilter(QObject* obj, QEvent* e) override;
 
-	private:
-	ZBackend *back;
-	ZListModel *model;
+private:
+    ZBackend* back;
+    ZListModel* model;
 };
 
 #endif // DAEMON_H

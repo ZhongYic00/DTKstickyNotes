@@ -4,9 +4,9 @@
 #
 #-------------------------------------------------
 
-QT += core gui multimedia multimediawidgets svg
-greaterThan(QT_MAJOR_VERSION, 5): QT += widgets
-QT += dtkcore dtkgui
+QT += core gui svg
+greaterThan(QT_MAJOR_VERSION, 5): QT += widgets network
+QT += dtkcore dtkgui dtkwidget
 
 TARGET = StickyNotes
 TEMPLATE = app
@@ -15,7 +15,7 @@ TEMPLATE = app
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += QT_DEPRECATED_WARNINGS QT_NO_DEBUG_OUTPUT
 
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -24,8 +24,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++11
 
-CONFIG += link_pkgconfig
-PKGCONFIG += dtkwidget
+#CONFIG += link_pkgconfig
+#PKGCONFIG += dtkwidget
 
 SOURCES += \
         main.cpp \
@@ -75,7 +75,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RESOURCES += \
     resources.qrc
 
-VERSION = 0.1
+VERSION = 0.0.5-beta
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 DISTFILES += \

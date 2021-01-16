@@ -89,7 +89,9 @@ void ZTextEdit::insertFromMimeData(const QMimeData *src) {
 		}
 		setCurrentCharFormat(bak);
 		cursor.endEditBlock();
-		updateResourcesList(toHtml());
+		auto html = toHtml();
+		updateResourcesList(html);
+		DTextEdit::setHtml(html);
 		updateResources();
 	}
 }
@@ -224,7 +226,7 @@ void ZTextEdit::updateCharFormat(const QTextCharFormat &nwfmt) {
 	emit fLinethroughState(nwfmt.fontStrikeOut());
 	emit pIsUrl(nwfmt.isAnchor());
 }
-void ZTextEdit::setHtml(const QString &html) {
+void ZTextEdit::setHtml(QString html) {
 	qDebug() << "call ZTextEdit::setHtml";
 	updateResourcesList(html);
 	updateResources();
@@ -272,13 +274,21 @@ void ZTextEdit::updateResources() {
 		document()->addResource(QTextDocument::ImageResource, "" + i, (processImage(Daemon::instance()->fetchImageData(i))));
 	}
 }
-void ZTextEdit::updateResourcesList(const QString &html) {
-	QRegExp reg("<img src=\"([^>]*==)\"");
+void ZTextEdit::updateResourcesList(QString &html) {
+	QRegExp reg("<img src=\"([^\"]*)\"");
 	resources.clear();
 	int from = 0;
 	while ((from = reg.indexIn(html, from)) != -1) {
 		qDebug() << "captured url" << reg.cap(1);
-		resources.append(reg.cap(1));
+		if (reg.cap(1).right(2) != "==") {
+			auto raw = Daemon::instance()->fetchRemoteResource(reg.cap(1));
+			auto hash = Daemon::instance()->calcImageHash(raw);
+			qDebug() << "hash=" << hash;
+			html.replace('\"' + reg.cap(1) + '\"', '\"' + hash + '\"');
+			if (!resources.contains(hash))
+				resources.append(hash);
+		} else
+			resources.append(reg.cap(1));
 		from += reg.matchedLength();
 	}
 	auto lst = std::unique(resources.begin(), resources.end());
