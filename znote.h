@@ -3,10 +3,14 @@
 #include <QtCore>
 class ZNote {
 public:
-    ZNote(const QString type = "attach");
+    enum Attachments {
+        Attach,
+        Detach
+    };
+    ZNote(const bool isAttached = true);
     ZNote(const QDateTime& key);
-    ZNote(const QDateTime& create, const QDateTime& upd, const QString& html = "", const QString& overview = "", const QString& type = "attach");
-    ZNote(ZNote& other);
+    ZNote(const QDateTime& create, const QDateTime& upd, const QString& html = "", const QString& overview = "", const bool isAttached = true);
+    //ZNote(ZNote& other);
     ZNote(const ZNote& other);
     ZNote(const QJsonObject& obj);
 
@@ -19,7 +23,7 @@ public:
     inline QDateTime lastModified() const;
     inline QString getHtml() const;
     inline QString getOverview() const;
-    inline QString getAttach() const;
+    inline bool isAttached() const;
     inline QString getUpdateTime() const;
     inline QString getCreateTime() const;
     inline QDateTime getUpdateTimeRaw() const;
@@ -38,7 +42,7 @@ private:
     QDateTime updateTime;
     QString html;
     QString overview;
-    QString displayType;
+    bool attachment;
 };
 
 bool ZNote::operator<(const ZNote& x) { return updateTime > x.updateTime; }
@@ -50,7 +54,7 @@ bool ZNote::operator>(const QDateTime& x) { return updateTime < x; }*/
 QDateTime ZNote::lastModified() const { return updateTime; }
 QString ZNote::getHtml() const { return html; }
 QString ZNote::getOverview() const { return overview; }
-QString ZNote::getAttach() const { return displayType; }
+bool ZNote::isAttached() const { return attachment; }
 QString ZNote::getUpdateTime() const { return humanDateTime(updateTime); }
 QString ZNote::getCreateTime() const { return humanDateTime(createTime); }
 QDateTime ZNote::getUpdateTimeRaw() const { return updateTime; }
@@ -58,7 +62,7 @@ QDateTime ZNote::getUpdateTimeRaw() const { return updateTime; }
 void ZNote::setHtml(const QString& _html) { html = _html; }
 void ZNote::setOverview(const QString& _overview) { overview = _overview; }
 void ZNote::commitChange() { updateTime = QDateTime::currentDateTime(); }
-void ZNote::toggleAttach() { displayType = (displayType == "attach") ? "detach" : "attach"; }
+void ZNote::toggleAttach() { attachment = !attachment; }
 
 Q_DECLARE_METATYPE(ZNote) //to enable storage in QVariant
 

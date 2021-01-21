@@ -1,7 +1,7 @@
 #include "znote.h"
 
-ZNote::ZNote(const QString type)
-    : displayType(type)
+ZNote::ZNote(const bool isAttached)
+    : attachment(isAttached)
 {
     updateTime = createTime = QDateTime::currentDateTime();
 }
@@ -9,40 +9,40 @@ ZNote::ZNote(const QDateTime& key)
     : updateTime(key)
 {
 }
-ZNote::ZNote(const QDateTime& create, const QDateTime& upd, const QString& html, const QString& overview, const QString& type)
+ZNote::ZNote(const QDateTime& create, const QDateTime& upd, const QString& html, const QString& overview, const bool isAttached)
     : createTime(create)
     , updateTime(upd)
     , html(html)
     , overview(overview)
-    , displayType(type)
+    , attachment(isAttached)
 {
 }
-ZNote::ZNote(ZNote& other)
-    : createTime(other.createTime)
-    , updateTime(other.updateTime)
-    , html(other.html)
-    , overview(other.overview)
-    , displayType(other.displayType)
-{
-}
+//ZNote::ZNote(ZNote& other)
+//    : createTime(other.createTime)
+//    , updateTime(other.updateTime)
+//    , html(other.html)
+//    , overview(other.overview)
+//    , attachment(other.attachment)
+//{
+//}
 ZNote::ZNote(const ZNote& other)
     : createTime(other.createTime)
     , updateTime(other.updateTime)
     , html(other.html)
     , overview(other.overview)
-    , displayType(other.displayType)
+    , attachment(other.attachment)
 {
 }
 ZNote::ZNote(const QJsonObject& obj)
-    : displayType("attach")
+    : attachment(true)
 {
     //    qDebug()<<obj;
-    if (obj.contains("createTime") & obj.contains("updateTime") & obj.contains("html") & obj.contains("overview")) {
-        createTime = QDateTime::fromString(obj["createTime"].toString());
-        updateTime = QDateTime::fromString(obj["updateTime"].toString());
-        html = obj["html"].toString();
-        overview = obj["overview"].toString();
-    }
+    //if (obj.contains("createTime") && obj.contains("updateTime") && obj.contains("html") && obj.contains("overview")) {
+    createTime = QDateTime::fromString(obj["createTime"].toString());
+    updateTime = QDateTime::fromString(obj["updateTime"].toString());
+    html = obj["html"].toString();
+    overview = obj["overview"].toString();
+    //}
 }
 
 QJsonObject ZNote::jsonObject() const
@@ -56,7 +56,7 @@ QJsonObject ZNote::jsonObject() const
 }
 void ZNote::print() const
 {
-    //    qDebug()<<overview<<displayType;
+    //    qDebug()<<overview<<Attachment;
     qDebug() << jsonObject();
 }
 QString ZNote::humanDateTime(const QDateTime& from)

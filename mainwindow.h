@@ -17,26 +17,26 @@
 DWIDGET_USE_NAMESPACE
 
 class MainWindow : public DMainWindow {
-	Q_OBJECT
+    Q_OBJECT
 
-	public:
-	explicit MainWindow(QWidget *parent = nullptr);
-	~MainWindow();
-	public slots:
-	void save();
+public:
+    explicit MainWindow(QWidget* parent = nullptr);
+    ~MainWindow();
+public slots:
+    void save();
 
-	protected:
-	void closeEvent(QCloseEvent *e);
+protected:
+    void closeEvent(QCloseEvent* e);
 
-	private:
-	QHBoxLayout *mainLayout;
-	ZList *notesListView;
-	Editor *noteEditView;
-	bool modified; // records changes to any item
+private:
+    QHBoxLayout* mainLayout;
+    ZList* notesList;
+    Editor* noteEditor;
+    bool modified; // records changes to any item
 
-	void display(const QModelIndex &item);
-	void reset();
-	void initNotesListView();
+    void display(const QModelIndex& item);
+    void reset();
+    void initNotesList();
 };
 
 #endif // MAINWINDOW_H

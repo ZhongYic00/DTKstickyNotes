@@ -4,13 +4,13 @@
 #include <DApplicationSettings>
 #include <DLog>
 #include <DSettings>
+#include <QDebug>
 
 #ifdef RELEASE
 #define APPLICATION_NAME "DTKStickyNotes"
 #else
 #define APPLICATION_NAME "DTKStickyNotes-develop"
 #endif
-
 //#define APP_VERSION "0.0.5-beta"
 
 DWIDGET_USE_NAMESPACE
@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
     std::cerr << std::endl
               << std::endl;
 #endif
+    QLoggingCategory::defaultCategory()->setEnabled(QtDebugMsg, true);
 
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
     app.setApplicationName(APPLICATION_NAME);

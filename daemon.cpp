@@ -21,7 +21,9 @@ Daemon::~Daemon()
 }
 void Daemon::addItem(const ZNote& item)
 {
+    qDebug() << "Daemon::addItem";
     model->appendRow(item);
+    qDebug() << "items:" << model->rowCount();
 }
 void Daemon::addItems(const QList<ZNote>& items)
 {
@@ -52,13 +54,13 @@ void Daemon::setHtml(const InnerIndex& idx, const QString& html)
 InnerIndex Daemon::commitChange(const InnerIndex& idx, bool toggleAttach) //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit
 {
     if (toggleAttach)
-        model->setData(idx, QVariant(), ZListModel::DisplayType);
+        model->setData(idx, QVariant(), ZListModel::Attachment);
     return model->setData(idx, QVariant(), ZListModel::UpdateTime);
 }
 void Daemon::commitChange(const QModelIndex& index, bool toggleAttach) //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit
 {
     if (toggleAttach)
-        model->setData(index, QVariant(), ZListModel::DisplayType);
+        model->setData(index, QVariant(), ZListModel::Attachment);
     model->setData(index, QVariant(), ZListModel::UpdateTime);
 }
 ZListModel* Daemon::getModel()

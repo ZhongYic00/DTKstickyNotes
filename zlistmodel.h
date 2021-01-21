@@ -12,7 +12,7 @@ public:
     enum roles { Overview = Qt::UserRole + 1,
         Html = Qt::UserRole + 2,
         UpdateTime = Qt::UserRole + 3,
-        DisplayType = Qt::UserRole + 4 };
+        Attachment = Qt::UserRole + 4 };
     int rowCount(const QModelIndex& parent = QModelIndex()) const;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
     QVariant data(const InnerIndex& idx, int role = Qt::DisplayRole) const;
@@ -21,7 +21,7 @@ public:
     inline InnerIndex setData(const InnerIndex& idx, const QVariant& value, int role = Qt::EditRole);
     void appendRow(const ZNote& value);
     void removeRow(const ZNote& value);
-    QModelIndex latestIndex() const;
+    inline QModelIndex latestIndex() const;
     QList<ZNote> exportAll() const;
     void dbg();
     inline QModelIndex indexOf(const InnerIndex& idx);
@@ -49,4 +49,5 @@ QModelIndex ZListModel::indexOf(const InnerIndex& idx)
     return index(items.queryIndex(idx) - 1); //Kth in items refers to (K-1)th in model
 }
 
+QModelIndex ZListModel::latestIndex() const { return index(0); }
 #endif // ZLISTMODEL_H

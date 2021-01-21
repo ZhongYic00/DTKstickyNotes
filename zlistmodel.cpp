@@ -10,21 +10,24 @@ int ZListModel::rowCount(const QModelIndex& parent) const
 }
 QVariant ZListModel::dataRole(const ZNote& rt, int role) const
 {
-    if (role == Qt::UserRole) {
+    switch (role) {
+    case Qt::UserRole:
         return QVariant::fromValue(rt);
-    } else if (role == UpdateTime) {
-        return QVariant::fromValue(rt.lastModified());
-    } else if (role == Html) {
-        return QVariant::fromValue(rt.getHtml());
-    } else if (role == Overview) {
-        return QVariant::fromValue(rt.getOverview());
-    } else if (role == DisplayType) {
-        return QVariant::fromValue(rt.getAttach());
+    case UpdateTime:
+        return rt.lastModified();
+    case Html:
+        return rt.getHtml();
+    case Overview:
+        return rt.getOverview();
+    case Attachment:
+        return rt.isAttached();
+    default:
+        return QVariant();
     }
-    return QVariant();
 }
 QVariant ZListModel::data(const QModelIndex& index, int role) const
 {
+    //    qDebug() << "call" << __func__ << index << role;
     //    qDebug()<<"call data"<<index.row()<<"role"<<role;
     if (!index.isValid())
         return QVariant();
@@ -33,24 +36,31 @@ QVariant ZListModel::data(const QModelIndex& index, int role) const
 }
 QVariant ZListModel::data(const InnerIndex& idx, int role) const
 {
+    //    qDebug() << "call " << __func__ << endl;
     auto rt = items.getKth(idx);
     return dataRole(rt, role);
 }
 InnerIndex ZListModel::setData(const QModelIndex& index, const InnerIndex& idx, const QVariant& value, const int& role)
 {
-    if (role == Overview || role == Html || role == DisplayType) {
+    qDebug(__FUNCTION__);
+    if (role == Qt::UserRole) {
+        items.erase(items.getKth(idx));
+        items.insert(value.value<ZNote>());
+        emit dataChanged(indexOf(value.value<ZNote>().lastModified()), index, QVector<int>({ Qt::UserRole }));
+    }
+    if (role == Overview || role == Html || role == Attachment) {
         auto str = value.value<QString>();
         items.modifyKth(idx, [str, role](ZNote* key) {
             if (role == Overview)
                 key->setOverview(str);
             else if (role == Html)
                 key->setHtml(str);
-            else if (role == DisplayType)
+            else if (role == Attachment)
                 key->toggleAttach();
             else
                 qDebug() << "ZListModel::setData error";
         });
-        emit dataChanged(index, index, QVector<int>({ Qt::UserRole }));
+        emit dataChanged(index, index, QVector<int>({ role }));
     } else if (role == UpdateTime) {
         auto itemData = items.getKth(idx);
         items.erase(itemData);
@@ -63,7 +73,9 @@ InnerIndex ZListModel::setData(const QModelIndex& index, const InnerIndex& idx, 
 }
 void ZListModel::appendRow(const ZNote& value)
 {
-    beginInsertRows(QModelIndex(), 0, 0);
+    int pos = items.queryIndex(value);
+    qDebug() << __FUNCTION__ << value.lastModified() << "at" << pos;
+    beginInsertRows(QModelIndex(), pos, pos);
     emit layoutAboutToBeChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
     items.insert(value);
     //   changePersistentIndexList();
@@ -79,10 +91,6 @@ void ZListModel::removeRow(const ZNote& value)
     //    changePersistentIndexList();
     emit layoutChanged();
     endRemoveRows();
-}
-QModelIndex ZListModel::latestIndex() const
-{
-    return index(0);
 }
 QList<ZNote> ZListModel::exportAll() const
 {

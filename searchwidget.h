@@ -11,26 +11,22 @@ class SearchWidget : public QWidget {
     Q_OBJECT
 public:
     explicit SearchWidget(QWidget* parent = nullptr);
-    void setSourceModel(QAbstractItemModel* m);
+    void setModel(QAbstractItemModel* m);
+    void setSearchResult(SearchResult* result);
 
 signals:
-    void changeCurrent(const QModelIndex& cur);
-public slots:
-    void changeSearchResult(const QString& text);
-    void reset(bool b);
+    void selectItem(const QModelIndex& cur);
 
 protected:
-    void moveEvent(QMoveEvent* event);
-    void resizeEvent(QResizeEvent* event);
+    void resizeEvent(QResizeEvent* e) override;
+    bool eventFilter(QObject* o, QEvent* e) override;
+public slots:
 
 private:
-    bool active;
-    bool freeze;
-    DSearchComboBox* input;
+    DSearchEdit* input;
     SearchResult* result;
+    bool eatFocusOut;
 private slots:
-    void keepPopupPosition();
-    void melt();
 };
 
 #endif // SEARCHWIDGET_H
