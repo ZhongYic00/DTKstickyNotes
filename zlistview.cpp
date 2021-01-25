@@ -108,8 +108,12 @@ void ItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, 
     QRect mainRect(rect), infoRect(rect);
     mainRect.adjust(0, 0, 0, -20);
     infoRect.adjust(0, 40, 0, 0);
+
+    //start drawing text
     painter->setPen(QPen(option.palette.text(), 1));
-    painter->drawText(QRectF(mainRect), QFontMetrics(painter->font()).elidedText(data.getAbstract(), Qt::ElideRight, 500));
+    //draw abstract
+    drawMultilineElidedText(painter, QRectF(mainRect), data.getAbstract().simplified());
+    //draw other info
     auto font = painter->font();
     font.setItalic(true);
     font.setPointSize(8);
@@ -122,4 +126,23 @@ void ItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, 
 QSize ItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     return QSize(option.rect.width(), 80);
+}
+void ItemDelegate::drawMultilineElidedText(QPainter* painter, const QRectF& rect, const QString& str) const
+{
+    QTextLayout layout(str, painter->font());
+    layout.beginLayout();
+    for (int lineSpacing = painter->fontMetrics().lineSpacing(), y = 0;;) {
+        QTextLine line = layout.createLine();
+        if (!line.isValid())
+            break;
+        line.setLineWidth(rect.width());
+        if (rect.height() > y + lineSpacing) {
+            line.draw(painter, QPointF(rect.x(), rect.y() + y));
+            y += lineSpacing;
+        } else {
+            QString lastLine = painter->fontMetrics().elidedText(str.mid(line.textStart()), Qt::ElideRight, rect.width());
+            painter->drawText(QPointF(rect.x(), rect.y() + y + painter->fontMetrics().ascent()), lastLine);
+            break;
+        }
+    }
 }

@@ -27,6 +27,9 @@ public:
 protected:
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
     QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+
+private:
+    void drawMultilineElidedText(QPainter* painter, const QRectF& rect, const QString& str) const;
 };
 
 #endif // ZLISTVIEW_H
