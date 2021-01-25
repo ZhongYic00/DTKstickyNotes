@@ -39,7 +39,7 @@ ZNote::ZNote(const QJsonObject& obj)
     //    qDebug()<<obj;
     //if (obj.contains("createTime") && obj.contains("updateTime") && obj.contains("html") && obj.contains("abstract")) {
     createTime = QDateTime::fromString(obj["createTime"].toString());
-    updateTime = QDateTime::fromString(obj["updateTime"].toString());
+    updateTime = QDateTime::fromString(obj["updateTime"].toString(), Qt::ISODateWithMs);
     html = obj["html"].toString();
     abstract = obj["abstract"].toString();
     //}
