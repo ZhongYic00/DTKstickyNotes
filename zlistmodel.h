@@ -28,8 +28,10 @@ public:
     void removeRow(const ZNote& value);
     inline QModelIndex latestIndex() const;
     QList<ZNote> exportAll() const;
-    void dbg();
     inline QModelIndex indexOf(const InnerIndex& idx);
+#ifndef RELEASE
+    void dbg();
+#endif
 
 private:
     Treap<ZNote> items;

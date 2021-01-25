@@ -34,7 +34,6 @@ void StickyWidget::initWidgets()
         attachButton->setIcon(QIcon(":/images/attach"));
         attachButton->setIconSize(QSize(25, 30));
         connect(attachButton, &DIconButton::clicked, [this]() {
-            qDebug() << "entering destruction";
             Daemon::instance()->toggleAttach(noteIndex());
             this->hide();
             this->deleteLater();

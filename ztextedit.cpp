@@ -21,7 +21,7 @@ ZTextEdit::ZTextEdit(QWidget* parent, bool DStyle)
     connect(this, &DTextEdit::currentCharFormatChanged, this, &ZTextEdit::updateCharFormat);
     sample = textCursor().charFormat();
     connect(this, &DTextEdit::textChanged, [this]() {
-        qDebug() << "textChanged emitted on" << idx;
+        //        qDebug() << "textChanged emitted on" << idx;
         Daemon::instance()->updateNoteContent(idx, QTextDocumentFragment(this->document()));
         commitModifications();
         //此处应采用事件队列，降低修改操作频率
@@ -61,13 +61,13 @@ bool ZTextEdit::event(QEvent* e)
 
 void ZTextEdit::insertFromMimeData(const QMimeData* src)
 {
-    qDebug() << src->formats();
-    qDebug() << src->html();
+    //    qDebug() << src->formats();
+    //    qDebug() << src->html();
     if (!src->hasHtml() && src->hasImage()) {
-        qDebug() << "insert image detected";
+        //        qDebug() << "insert image detected";
         pInsImage(src->imageData());
     } else {
-        qDebug() << "insert html detected";
+        //        qDebug() << "insert html detected";
         auto cursor = textCursor();
         cursor.beginEditBlock();
         auto bak = cursor.charFormat();
@@ -260,7 +260,7 @@ void ZTextEdit::updateCharFormat(const QTextCharFormat& nwfmt)
 }
 void ZTextEdit::setHtml(QString html)
 {
-    qDebug() << "call ZTextEdit::setHtml";
+    //    qDebug() << "call ZTextEdit::setHtml";
     updateResourcesList(html);
     updateResources();
     DTextEdit::setHtml(html);
@@ -327,7 +327,7 @@ void ZTextEdit::updateResourcesList(QString& html)
         if (reg.cap(1).right(2) != "==") {
             auto raw = Daemon::instance()->fetchRemoteResource(reg.cap(1));
             auto hash = Daemon::instance()->calcImageHash(raw);
-            qDebug() << "hash=" << hash;
+            //            qDebug() << "hash=" << hash;
             html.replace('\"' + reg.cap(1) + '\"', '\"' + hash + '\"');
             if (!resources.contains(hash))
                 resources.append(hash);

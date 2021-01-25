@@ -94,6 +94,7 @@ QList<ZNote> ZListModel::exportAll() const
     //     qDebug()<<"call ZListModel::exportAll()";
     return QList<ZNote>::fromStdList(items.getAll());
 }
+#ifndef RELEASE
 void ZListModel::dbg()
 {
     qDebug() << rowCount() << "items in model:";
@@ -102,3 +103,4 @@ void ZListModel::dbg()
         qDebug() << idx.data(Qt::UserRole).value<ZNote>() << "attachment:" << idx.data(Attachment);
     }
 }
+#endif

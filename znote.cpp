@@ -54,11 +54,6 @@ QJsonObject ZNote::jsonObject() const
     obj["html"] = html;
     return obj;
 }
-void ZNote::print() const
-{
-    //    qDebug()<<abstract<<Attachment;
-    qDebug() << jsonObject();
-}
 QString ZNote::humanDateTime(const QDateTime& from)
 {
     auto cur = QDateTime::currentDateTime();

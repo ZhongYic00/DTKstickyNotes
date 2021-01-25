@@ -22,15 +22,6 @@ class Treap {
         inline void maintain() { tSize = (ch[0] ? ch[0]->tSize : 0) + (ch[1] ? ch[1]->tSize : 0) + 1; }
         //        inline void reverse(){rev^=1,swap(ch[0],ch[1]);}
         //        inline void pushdown(){if(rev){if(ch[0])ch[0]->reverse();if(ch[1])ch[1]->reverse();rev=false;}}
-        void print()
-        {
-            //            pushdown();
-            if (ch[0])
-                ch[0]->print();
-            qDebug() << key << ' ';
-            if (ch[1])
-                ch[1]->print();
-        }
         std::list<ValueType> collect()
         {
             std::list<ValueType> m({ *(key.get()) }), l, r;

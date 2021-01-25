@@ -88,13 +88,8 @@ QLayout* ZList::initAddLayer()
 }
 void ZList::addItem(const ZNote& item)
 {
-    qDebug() << "model->rowCount()" << model->rowCount();
     Daemon::instance()->addItem(item);
     auto i = model->index(0, 0);
-    qDebug() << "model->rowCount()" << model->rowCount();
-    for (auto i = 0; i < model->rowCount(); i++) {
-        qDebug() << model->data(model->index(i, 0), ZListModel::Attachment);
-    }
     listview->setCurrentIndex(i);
     emit currentChanged(i);
 }
@@ -118,10 +113,7 @@ void ZList::popupMenu(const QPoint& pos)
         auto index = listview->selection()[0];
         connect(detachAction, &QAction::triggered, [index, this]() {
             listview->clearSelectionExt();
-            Daemon::instance()->sourceModel()->dbg();
-            qDebug() << "toggle attachment of" << index.data(ZListModel::IndexRole).value<InnerIndex>();
             Daemon::instance()->toggleAttach(index.data(ZListModel::IndexRole).value<InnerIndex>());
-            Daemon::instance()->sourceModel()->dbg();
             //            listview->setCurrentIndex(indexOf(curIdx));
         });
         menu->addAction(detachAction);

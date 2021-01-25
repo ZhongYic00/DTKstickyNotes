@@ -37,7 +37,7 @@ void Daemon::setHtml(const InnerIndex& idx, const QString& html)
 }
 InnerIndex Daemon::commitChange(const InnerIndex& idx) //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit
 {
-    qDebug() << "commitChange(" << idx << ")";
+    //    qDebug() << "commitChange(" << idx << ")";
     return model->setData(idx, QVariant(), ZListModel::UpdateTime);
 }
 void Daemon::commitChange(const QModelIndex& index) //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit

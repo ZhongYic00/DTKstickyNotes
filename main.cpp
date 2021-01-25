@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     DApplication::loadDXcbPlugin();
     DApplication app(argc, argv);
 
-#ifndef RUBBISH_DBG
+#ifdef RELEASE
     qInstallMessageHandler(myMessageOutput);
     std::freopen((QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/stickyNotes.log").toStdString().c_str(), "a", stderr);
     std::cerr << std::endl

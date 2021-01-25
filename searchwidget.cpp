@@ -60,8 +60,6 @@ bool SearchWidget::eventFilter(QObject* o, QEvent* e)
         break;
     }
     case QEvent::MouseButtonPress: {
-        qDebug() << e;
-        qDebug() << result->rect();
         auto source = qobject_cast<QWidget*>(o);
         if (source) {
             QWidget* target = QApplication::widgetAt(source->mapToGlobal(static_cast<QMouseEvent*>(e)->pos()));

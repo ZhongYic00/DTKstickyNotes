@@ -74,7 +74,6 @@ QWidget* Systemtray::initNoteList(QWidget* parent)
     connect(model, &QSortFilterProxyModel::rowsInserted, [this, model](const QModelIndex& parent, int first, int last) {
         assert(parent == QModelIndex());
         assert(first == last);
-        qDebug() << "rowsInserted emitted";
         addNote(model->index(first, 0).data(Qt::UserRole).value<ZNote>());
     });
     connect(model, &QSortFilterProxyModel::rowsAboutToBeRemoved, [this, model](const QModelIndex& parent, int first, int last) {

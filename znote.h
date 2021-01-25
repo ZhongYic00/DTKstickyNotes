@@ -36,10 +36,10 @@ public:
     inline void commitChange();
     inline void toggleAttach();
 
+    QJsonObject jsonObject() const;
+
     static QString humanDateTime(const QDateTime& from);
 
-    QJsonObject jsonObject() const;
-    void print() const;
     friend QDebug operator<<(QDebug o, const ZNote& z);
 
 private:

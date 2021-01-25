@@ -43,16 +43,13 @@ SearchResult::SearchResult(QWidget* parent, QWidget* edit)
 }
 void SearchResult::filter(const QString& str)
 {
-    qDebug() << "filterString" << str;
     if (str != "") {
         if (!isVisible()) {
-            qDebug() << "show";
             setVisible(true);
         }
         model->setFilterFixedString(str);
     } else {
         if (!model->filterRegExp().isEmpty()) {
-            qDebug() << "hide";
             setVisible(false);
         }
     }
