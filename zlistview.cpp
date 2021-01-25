@@ -130,6 +130,9 @@ QSize ItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelInd
 void ItemDelegate::drawMultilineElidedText(QPainter* painter, const QRectF& rect, const QString& str) const
 {
     QTextLayout layout(str, painter->font());
+    QTextOption option;
+    option.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+    layout.setTextOption(option);
     layout.beginLayout();
     for (int lineSpacing = painter->fontMetrics().lineSpacing(), y = 0;;) {
         QTextLine line = layout.createLine();
