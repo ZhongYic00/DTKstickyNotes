@@ -1,4 +1,5 @@
 #include "backend.h"
+#include "daemon.h"
 
 ZBackend::ZBackend()
     : mediaSourceId(0)
@@ -10,6 +11,7 @@ ZBackend::ZBackend()
 ZBackend::~ZBackend()
 {
     //	qDebug() << "call ZBackend::~ZBackend()";
+    saveMainFile(Daemon::instance()->exportNotes());
     saveMediaFile();
 }
 void ZBackend::initPath()

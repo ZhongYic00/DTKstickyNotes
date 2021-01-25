@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 
 #ifdef RELEASE
     qInstallMessageHandler(myMessageOutput);
-    std::freopen((QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/stickyNotes.log").toStdString().c_str(), "a", stderr);
+    std::freopen((QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + APPLICATION_NAME + ".log").toStdString().c_str(), "a", stderr);
     std::cerr << std::endl
               << std::endl;
 #endif

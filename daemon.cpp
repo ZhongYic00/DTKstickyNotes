@@ -19,6 +19,9 @@ Daemon::Daemon(QObject* parent)
 Daemon::~Daemon()
 {
     assert(daemon == this);
+    delete back; //back uses Daemon::instance & model, so destruct first
+    delete model;
+    delete tray;
     if (daemon == this)
         daemon = nullptr;
 }
