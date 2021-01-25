@@ -1,5 +1,9 @@
-/build/
-*.deb
-*.sh
-*.txt
+*
+!*.cpp
+!*.qrc
+!*.qss
+!*.pro
+!*.md
+!/doc/
+!/resources/
 
