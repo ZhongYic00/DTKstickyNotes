@@ -2,6 +2,7 @@
 #define DAEMON_H
 
 #include "backend.h"
+#include "systemtray.h"
 #include "zlistmodel.h"
 #include "zlistview.h"
 #include <QObject>
@@ -11,21 +12,21 @@ class Daemon : public QObject {
 public:
     Daemon(QObject* parent = nullptr);
     ~Daemon() override;
-    void addItem(const ZNote& item);
-    void addItems(const QList<ZNote>& items);
-    void removeItem(const ZNote& item);
-    void removeItems(const QList<ZNote>& items);
+    inline void addItem(const ZNote& item);
+    inline void addItems(const QList<ZNote>& items);
+    inline void removeItem(const ZNote& item);
+    inline void removeItems(const QList<ZNote>& items);
+    inline ZListModel* sourceModel();
+    inline Systemtray* systemTray();
+    inline void toggleAttach(const InnerIndex& idx); //toggle attachment attribute of note, and update updateTime at the same time
+    inline void updateNoteContent(const InnerIndex& idx, const QTextDocumentFragment& doc);
     void setHtml(const InnerIndex& idx, const QString& html);
-    void setOverview(const InnerIndex& idx, const QString& overview);
-    void commitChange(const QModelIndex& index, bool toggleAttach);
-    InnerIndex commitChange(const InnerIndex& idx, bool toggleAttach);
-    ZListModel* getModel();
-    QList<ZNote> getDataList() const;
+    void setAbstract(const InnerIndex& idx, const QString& Abstract);
+    void commitChange(const QModelIndex& index);
+    InnerIndex commitChange(const InnerIndex& idx);
+    QList<ZNote> exportNotes() const;
     QList<QPair<QString, QString>> getResourceList() const;
     void save();
-    QObject* systemTray();
-    void attach(InnerIndex idx);
-    void detach(InnerIndex idx);
     QString calcImageHash(const QUrl& fileUrl);
     QString calcImageHash(const QByteArray& data);
     QByteArray fetchImageData(const QString& hash);
@@ -36,7 +37,8 @@ signals:
     void activationChanged(QObject* obj);
     void gainActivation(QWidget* obj);
     void lostActivation(QWidget* obj);
-    void itemDetached(InnerIndex idx);
+    void activateStickyNote(const InnerIndex& idx);
+    void activateMainwindow(const InnerIndex& idx);
 
 protected:
     static Daemon* daemon;
@@ -46,6 +48,26 @@ protected:
 private:
     ZBackend* back;
     ZListModel* model;
+    Systemtray* tray;
 };
-
+void Daemon::addItem(const ZNote& item) { model->appendRow(item); }
+void Daemon::addItems(const QList<ZNote>& items)
+{
+    for (auto i : items)
+        addItem(i);
+}
+void Daemon::removeItem(const ZNote& item) { model->removeRow(item); }
+void Daemon::removeItems(const QList<ZNote>& items)
+{
+    for (auto i : items)
+        removeItem(i);
+}
+ZListModel* Daemon::sourceModel() { return model; }
+Systemtray* Daemon::systemTray() { return tray; }
+void Daemon::toggleAttach(const InnerIndex& idx)
+{
+    //    commitChange(idx);
+    model->setData(idx, QVariant(), ZListModel::Attachment);
+}
+void Daemon::updateNoteContent(const InnerIndex& idx, const QTextDocumentFragment& doc) { model->setData(idx, QVariant::fromValue(doc), ZListModel::Content); }
 #endif // DAEMON_H

@@ -8,7 +8,6 @@
 #include <QDebug>
 #include <QtWidgets>
 
-#include "daemon.h"
 #include "editor.h"
 #include "searchwidget.h"
 #include "stickywidget.h"
@@ -21,12 +20,14 @@ class MainWindow : public DMainWindow {
 
 public:
     explicit MainWindow(QWidget* parent = nullptr);
-    ~MainWindow();
+    ~MainWindow() override;
+signals:
+    void sigDestruct();
 public slots:
     void save();
 
 protected:
-    void closeEvent(QCloseEvent* e);
+    void closeEvent(QCloseEvent* e) override;
 
 private:
     QHBoxLayout* mainLayout;
@@ -34,8 +35,6 @@ private:
     Editor* noteEditor;
     bool modified; // records changes to any item
 
-    void display(const QModelIndex& item);
-    void reset();
     void initNotesList();
 };
 

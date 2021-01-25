@@ -4,21 +4,26 @@
 #include "fhqtreap.cpp"
 #include "znote.h"
 #include <QAbstractItemModel>
+#include <QTextDocumentFragment>
 
 typedef ZNote InnerIndex;
+Q_DECLARE_METATYPE(QTextDocumentFragment)
 class ZListModel : public QAbstractListModel {
 public:
     ZListModel(QObject* parent = nullptr);
-    enum roles { Overview = Qt::UserRole + 1,
-        Html = Qt::UserRole + 2,
-        UpdateTime = Qt::UserRole + 3,
-        Attachment = Qt::UserRole + 4 };
+    enum roles {
+        Abstract = Qt::UserRole + 1,
+        Html = Qt::UserRole + (1 << 1),
+        UpdateTime = Qt::UserRole + (1 << 2),
+        Attachment = Qt::UserRole + (1 << 3),
+        Content = Abstract | Html,
+        IndexRole = UpdateTime
+    };
     int rowCount(const QModelIndex& parent = QModelIndex()) const;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
     QVariant data(const InnerIndex& idx, int role = Qt::DisplayRole) const;
-    //    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex());
-    inline bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole);
-    inline InnerIndex setData(const InnerIndex& idx, const QVariant& value, int role = Qt::EditRole);
+    inline bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole); //pre-process
+    inline InnerIndex setData(const InnerIndex& idx, const QVariant& value, int role = Qt::EditRole); //pre-process
     void appendRow(const ZNote& value);
     void removeRow(const ZNote& value);
     inline QModelIndex latestIndex() const;
@@ -29,20 +34,23 @@ public:
 private:
     Treap<ZNote> items;
     QVariant dataRole(const ZNote& rt, int role) const;
-    InnerIndex setData(const QModelIndex& index, const InnerIndex& idx, const QVariant& value, const int& role);
+    InnerIndex setData(const QModelIndex& index, const InnerIndex& idx, const QVariant& value, const int& role); //only about user-role
 };
 bool ZListModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
     if (!index.isValid())
         return false;
+    if (role < Qt::UserRole)
+        return QAbstractItemModel::setData(index, value, role);
     auto idx = data(index, Qt::UserRole).value<InnerIndex>();
-    setData(index, idx, value, role);
+    setData(index, idx, value, role ^ Qt::UserRole);
     return true;
 }
 InnerIndex ZListModel::setData(const InnerIndex& idx, const QVariant& value, int role)
 {
+    //    assert(role > Qt::UserRole);
     auto index = indexOf(idx);
-    return setData(index, idx, value, role);
+    return setData(index, idx, value, role ^ Qt::UserRole);
 }
 QModelIndex ZListModel::indexOf(const InnerIndex& idx)
 {

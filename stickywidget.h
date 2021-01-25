@@ -1,34 +1,39 @@
 #ifndef STICKYWIDGET_H
 #define STICKYWIDGET_H
+
+#include "roundedwidgets.h"
+#include "transparentwidget.h"
+#include "znote.h"
+#include "ztextedit.h"
 #include <DBlurEffectWidget>
 #include <DIconButton>
-#include <QStackedLayout>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
 #include <QCursor>
-#include "transparentwidget.h"
-#include "ztextedit.h"
-#include "roundedwidgets.h"
-#include "znote.h"
+#include <QHBoxLayout>
+#include <QStackedLayout>
+#include <QVBoxLayout>
 
 DWIDGET_USE_NAMESPACE
-class StickyWidget : public DBlurEffectWidget
-{
+class StickyWidget : public DBlurEffectWidget {
     Q_OBJECT
 public:
-    StickyWidget(QObject *parent=nullptr);
-    void setNote(ZNote &d);
-    ZNote getNote();
+    StickyWidget(QWidget* parent = nullptr);
+    inline void setNote(const ZNote& note);
+    inline InnerIndex noteIndex() const;
+    inline ZTextEdit* textEditor() const;
+    //    void commitModifications();
 signals:
     void attach();
-    void textChanged(const QString &text="");
-protected:
-//    void focusOutEvent(QFocusEvent *e);
-private:
-    ZNote note;
-    ZTextEdit *editor;
-    void initWidgets();
-    QWidget* initToolBar(QWidget *parent,ZTextEdit *textEditor);
-};
+    void textChanged(const QString& text = "");
+    //    void indexChanged(const InnerIndex& ori, const InnerIndex& idx);
 
+protected:
+    //    void focusOutEvent(QFocusEvent *e);
+private:
+    ZTextEdit* editor;
+    void initWidgets();
+    QWidget* initToolBar(QWidget* parent, ZTextEdit* textEditor);
+};
+InnerIndex StickyWidget::noteIndex() const { return editor->index(); }
+ZTextEdit* StickyWidget::textEditor() const { return editor; }
+void StickyWidget::setNote(const ZNote& note) { editor->setNote(note); }
 #endif // STICKYWIDGET_H

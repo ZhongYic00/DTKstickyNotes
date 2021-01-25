@@ -1,4 +1,4 @@
-#include "systemtray.h"
+#include "daemon.h"
 #include <DAboutDialog>
 #include <DApplication>
 #include <DApplicationSettings>
@@ -49,6 +49,7 @@ int main(int argc, char* argv[])
     QLoggingCategory::defaultCategory()->setEnabled(QtDebugMsg, true);
 
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
+    app.setQuitOnLastWindowClosed(false);
     app.setApplicationName(APPLICATION_NAME);
     app.setApplicationLicense("GPLv2");
     app.setApplicationHomePage("https://github.com/zhongyic00/DTKStickyNotes/");
@@ -69,8 +70,7 @@ int main(int argc, char* argv[])
 
     DApplicationSettings appSettings(&app); //initialize application theme settings
 
-    Systemtray tray(&app);
-    tray.show();
+    Daemon daemon;
 
     /*DAboutDialog dlg;
     dlg.setProductName("便笺");
@@ -83,7 +83,5 @@ int main(int argc, char* argv[])
     dlg.setCompanyLogo(companyLogo.pixmap(100, 100));
     app.setAboutDialog(&dlg);*/
 
-    int rt = app.exec();
-    tray.save();
-    return rt;
+    return app.exec();
 }

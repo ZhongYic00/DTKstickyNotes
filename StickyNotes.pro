@@ -7,6 +7,7 @@
 QT += core gui svg
 greaterThan(QT_MAJOR_VERSION, 5): QT += widgets network
 QT += dtkcore dtkgui dtkwidget
+QT += testlib
 
 TARGET = StickyNotes
 TEMPLATE = app

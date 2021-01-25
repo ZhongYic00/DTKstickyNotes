@@ -10,6 +10,9 @@ Daemon::Daemon(QObject* parent)
 
     back = new ZBackend;
     model = new ZListModel(this);
+    tray = new Systemtray(this);
+
+    tray->show();
 
     addItems(back->getSavedDataList());
 }
@@ -19,62 +22,32 @@ Daemon::~Daemon()
     if (daemon == this)
         daemon = nullptr;
 }
-void Daemon::addItem(const ZNote& item)
-{
-    qDebug() << "Daemon::addItem";
-    model->appendRow(item);
-    qDebug() << "items:" << model->rowCount();
-}
-void Daemon::addItems(const QList<ZNote>& items)
-{
-    for (auto i : items)
-        addItem(i);
-}
-void Daemon::removeItem(const ZNote& item)
-{
-    model->removeRow(item);
-}
-void Daemon::removeItems(const QList<ZNote>& items)
-{
-    for (auto i : items)
-        removeItem(i);
-}
-QList<ZNote> Daemon::getDataList() const
+
+QList<ZNote> Daemon::exportNotes() const
 {
     return model->exportAll();
 }
-void Daemon::setOverview(const InnerIndex& idx, const QString& overview)
+void Daemon::setAbstract(const InnerIndex& idx, const QString& Abstract)
 {
-    model->setData(idx, QVariant::fromValue(overview), ZListModel::Overview);
+    model->setData(idx, QVariant::fromValue(Abstract), ZListModel::Abstract);
 }
 void Daemon::setHtml(const InnerIndex& idx, const QString& html)
 {
     model->setData(idx, QVariant::fromValue(html), ZListModel::Html);
 }
-InnerIndex Daemon::commitChange(const InnerIndex& idx, bool toggleAttach) //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit
+InnerIndex Daemon::commitChange(const InnerIndex& idx) //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit
 {
-    if (toggleAttach)
-        model->setData(idx, QVariant(), ZListModel::Attachment);
+    qDebug() << "commitChange(" << idx << ")";
     return model->setData(idx, QVariant(), ZListModel::UpdateTime);
 }
-void Daemon::commitChange(const QModelIndex& index, bool toggleAttach) //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit
+void Daemon::commitChange(const QModelIndex& index) //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit
 {
-    if (toggleAttach)
-        model->setData(index, QVariant(), ZListModel::Attachment);
     model->setData(index, QVariant(), ZListModel::UpdateTime);
-}
-ZListModel* Daemon::getModel()
-{
-    return model;
 }
 void Daemon::save()
 {
     back->saveMainFile(model->exportAll());
     back->saveMediaFile();
-}
-QObject* Daemon::systemTray()
-{
-    return parent();
 }
 bool Daemon::eventFilter(QObject* obj, QEvent* e)
 {
@@ -87,12 +60,6 @@ bool Daemon::eventFilter(QObject* obj, QEvent* e)
     } else {
         return QObject::eventFilter(obj, e);
     }
-}
-void Daemon::detach(InnerIndex idx)
-{
-    idx = commitChange(idx, true);
-    //    emit itemDetached(model->indexOf(idx));
-    emit itemDetached(idx);
 }
 Daemon* Daemon::instance()
 {

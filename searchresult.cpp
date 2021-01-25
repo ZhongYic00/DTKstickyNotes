@@ -1,4 +1,5 @@
 #include "searchresult.h"
+#include "daemon.h"
 
 SearchResult::SearchResult(QWidget* parent, QWidget* edit)
     : DBlurEffectWidget(parent)
@@ -10,6 +11,7 @@ SearchResult::SearchResult(QWidget* parent, QWidget* edit)
     view = new ZListView(this);
     view->setNoBackground(true);
     view->setModel(model);
+    view->setSelectionMode(QAbstractItemView::SingleSelection);
     auto layout = new QVBoxLayout(this);
     layout->setContentsMargins(5, 5, 5, 5);
     layout->addWidget(new DLabel("Search Results", this));
@@ -22,15 +24,22 @@ SearchResult::SearchResult(QWidget* parent, QWidget* edit)
     setBlurEnabled(true);
     setMode(DBlurEffectWidget::GaussianBlur);
 
-    //setParent(nullptr);
     setWindowFlags(Qt::Drawer);
-    //setAttribute(Qt::WA_ShowWithoutActivating);
-    setWindowModality(Qt::NonModal);
     setSearchEdit(edit);
 
     model->setDynamicSortFilter(false);
-    model->setFilterRole(ZListModel::Overview);
-    //connect(view, &QListView::clicked, [=](const QModelIndex& cur) { emit changeCurrent(model->mapToSource(cur)); });
+    model->setFilterRole(ZListModel::Abstract);
+    connect(view, &QListView::clicked, [=](const QModelIndex& index) {
+        auto idx = index.data(ZListModel::IndexRole).value<InnerIndex>();
+        if (index.data(ZListModel::Attachment).value<bool>()) {
+            //attached
+            emit Daemon::instance()->activateMainwindow(idx);
+        } else {
+            //detached
+            emit Daemon::instance()->activateStickyNote(idx);
+        }
+        view->clearSelection();
+    });
 }
 void SearchResult::filter(const QString& str)
 {
@@ -39,7 +48,6 @@ void SearchResult::filter(const QString& str)
         if (!isVisible()) {
             qDebug() << "show";
             setVisible(true);
-            //searchEdit->setFocus();
         }
         model->setFilterFixedString(str);
     } else {
@@ -60,7 +68,7 @@ void SearchResult::setSearchEdit(QWidget* edit)
     setFocusPolicy(Qt::NoFocus);
     searchEdit->setFocusPolicy(originPolicy);
     setFocusProxy(searchEdit);
-    qDebug() << searchEdit->focusPolicy() << searchEdit->focusProxy() << focusProxy();
+    //    qDebug() << searchEdit->focusPolicy() << searchEdit->focusProxy() << focusProxy();
 }
 //SearchResult::SearchResult(QWidget* parent, QWidget* edit)
 //    : ZListView(parent)

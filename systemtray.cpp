@@ -1,152 +1,140 @@
 #include "systemtray.h"
+#include "daemon.h"
 
 DTK_USE_NAMESPACE
 Systemtray::Systemtray(QObject* parent)
     : QSystemTrayIcon(parent)
 {
-	/*    auto addNote=[&](ZNote note=ZNote("detach"),bool existing=false){
-			if(!existing)daemon->addItem(note);
-			qDebug()<<"addNote(";note.print();
-			std::cerr<<this;
-			auto widget=new StickyWidget(this);
-			widget->setNote(note);
-			updateNote(widget);
-			connect(widget,&StickyWidget::attach,[this,widget](){
-				widget->removeEventFilter(daemon);
-				this->updateNote(widget);
-				qDebug()<<"just a signal";
-			});
-			widget->installEventFilter(daemon);
-			widget->show();
-		};*/
-
-	setIcon(QIcon(":/images/logo256"));
+    setIcon(QIcon(":/images/logo256"));
 
     { // init application
-        daemon = new Daemon(this);
-        win = new MainWindow;
-        Dtk::Widget::moveToCenter(win);
-        win->show();
-    }
-
-    { // init stickyNotes list
-        stickyNotes = new QSortFilterProxyModel(this);
-        stickyNotes->setSourceModel(daemon->getModel());
-        stickyNotes->setFilterRole(ZListModel::Attachment);
-        stickyNotes->setFilterFixedString("detach");
+        initMainwindow();
     }
 
     { // init tray contextMenu
-        auto menu = new QMenu;
-        auto add = new QAction(tr("Add"), menu);
-        noteSubmenu = new QMenu(tr("sticky notes"));
-        auto quit = new QAction(tr("Quit"), menu);
-        connect(add, &QAction::triggered, [&]() { addNote(); });
-        connect(quit, &QAction::triggered, qApp, &QApplication::quit);
-        menu->addAction(add);
-        menu->addMenu(noteSubmenu);
-        menu->addAction(quit);
-        setContextMenu(menu);
+        menu = new QMenu;
+        auto addAction = new QAction(tr("新的便笺"), menu);
+        auto noteListSubmenu = new QMenu(tr("桌面便笺"));
+        auto noteListAction = new QWidgetAction(noteListSubmenu);
+        auto noteList = initNoteList(noteListSubmenu);
+        noteListAction->setDefaultWidget(noteList);
+        auto quitAction = new QAction(tr("退出"), menu);
+        connect(addAction, &QAction::triggered, [&]() { Daemon::instance()->addItem(ZNote(false)); });
+        connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
+        menu->addAction(addAction);
+        menu->addMenu(noteListSubmenu);
+        noteListSubmenu->addAction(noteListAction);
+        menu->addAction(quitAction);
     }
 
     connect(this, &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason) {
-        if (reason == QSystemTrayIcon::Context)
-            ;
-        else if (reason == QSystemTrayIcon::Trigger) {
+        if (reason == QSystemTrayIcon::Trigger) {
+            if (!win)
+                initMainwindow();
             if (win->isHidden())
                 win->show();
             else
                 win->activateWindow();
         }
+        if (reason == QSystemTrayIcon::Context) {
+            if (menu) {
+                menu->popup(QCursor::pos());
+            }
+        }
     });
-    connect(daemon, &Daemon::lostActivation, [&](QWidget* obj) {
+    connect(Daemon::instance(), &Daemon::lostActivation, [&](QWidget* obj) {
         if (obj->isHidden())
             return;
+        //        qDebug() << "lostActivation emitted";
         auto stickyNote = qobject_cast<StickyWidget*>(obj);
-        this->updateNote(stickyNote);
+        assert(stickyNote);
+        //        Daemon::instance()->sourceModel()->dbg();
+        //        this->commitStickyNoteModifications(stickyNote);
+        //        Daemon::instance()->sourceModel()->dbg();
     });
-    connect(daemon, &Daemon::itemDetached, [&](InnerIndex idx) {
-        /*        auto subIdx=stickyNotes->mapFromSource(index);
-				if(subIdx.isValid()){
-					qDebug()<<"subIndex is Valid";
-					addNote(index.data(Qt::UserRole).value<ZNote>(),true);
-				}*/
-		addNote(daemon->getModel()->data(idx, Qt::UserRole).value<ZNote>(), true);
-	});
+    connect(Daemon::instance(), &Daemon::activateStickyNote, this, &Systemtray::activateStickyNote);
 }
-void Systemtray::updateNote(StickyWidget* obj)
+void Systemtray::initMainwindow()
 {
-    auto note = obj->getNote();
-    //    qDebug()<<this<<"updateNote";note.print();
-    auto idx = note.getUpdateTimeRaw();
-    daemon->getModel()->indexOf(idx);
-    daemon->setHtml(idx, note.getHtml());
-    daemon->setOverview(idx, note.getOverview());
-    daemon->commitChange(idx, note.isAttached()); //bugs may occur
-    note = stickyNotes->data(stickyNotes->index(0, 0), Qt::UserRole).value<ZNote>();
-    obj->setNote(note);
+    win = new MainWindow;
+    Dtk::Widget::moveToCenter(win);
+    win->show();
+    connect(win, &MainWindow::sigDestruct, [this]() { win = nullptr; });
 }
-void Systemtray::save()
+QWidget* Systemtray::initNoteList(QWidget* parent)
 {
-    daemon->save();
+    auto list = new ZListView(parent);
+    auto model = new QSortFilterProxyModel(list);
+
+    model->setSourceModel(Daemon::instance()->sourceModel());
+    //    model->setDynamicSortFilter(false);
+    model->setFilterRole(ZListModel::Attachment);
+    model->setFilterFixedString("false");
+
+    connect(model, &QSortFilterProxyModel::rowsInserted, [this, model](const QModelIndex& parent, int first, int last) {
+        assert(parent == QModelIndex());
+        assert(first == last);
+        qDebug() << "rowsInserted emitted";
+        addNote(model->index(first, 0).data(Qt::UserRole).value<ZNote>());
+    });
+    connect(model, &QSortFilterProxyModel::rowsAboutToBeRemoved, [this, model](const QModelIndex& parent, int first, int last) {
+        assert(parent == QModelIndex());
+        assert(first == last);
+        removeIdxTmp = model->index(first, 0).data(ZListModel::IndexRole).value<InnerIndex>();
+        //        qDebug() << "rowsAboutToBeRemoved emitted" << model->index(first, 0).data(ZListModel::IndexRole); //顺序调整也会经此步骤
+        //        removeNote(model->index(first, 0).data(ZListModel::IndexRole).value<InnerIndex>());
+    });
+    connect(model, &QSortFilterProxyModel::rowsRemoved, [this]() {
+        //        qDebug() << "rowsRemoved emitted";
+        removeNote(removeIdxTmp);
+    });
+
+    list->setNoBackground(true);
+    list->setModel(model);
+    list->setSelectionMode(QAbstractItemView::SingleSelection);
+
+    connect(list, &ZListView::clicked, [this, list](const QModelIndex& index) {
+        //        Daemon::instance()->sourceModel()->dbg();
+        //        qDebug() << "request stickyWidget of" << index.data(ZListModel::IndexRole).value<InnerIndex>() << "result=" << stickyWidgets[index.data(ZListModel::IndexRole).value<InnerIndex>()];
+        activateStickyNote(index.data(ZListModel::IndexRole).value<InnerIndex>());
+        menu->hide();
+        list->clearSelection();
+    });
+
+    return list;
 }
-void Systemtray::addNote(ZNote note, bool existing)
+void Systemtray::commitStickyNoteModifications(const InnerIndex& ori, const InnerIndex& idx)
 {
-    if (!existing)
-        daemon->addItem(note);
-    //        qDebug()<<"addNote(";note.print();
-    auto widget = new StickyWidget(this);
+    //    qDebug() << "mapping of" << ori << "changed to" << idx << stickyWidgets[ori];
+    stickyWidgets[idx] = stickyWidgets[ori];
+    stickyWidgets.erase(ori);
+    //    widget->commitModifications();
+}
+void Systemtray::addNote(const ZNote& note)
+{
+    auto widget = new StickyWidget;
     widget->setNote(note);
-    updateNote(widget);
-    connect(widget, &StickyWidget::attach, [this, widget]() {
-        widget->removeEventFilter(daemon);
-        this->updateNote(widget);
-        this->updateStickyNotesMenu(widget, false);
-        //        delete widget;
+    widget->installEventFilter(Daemon::instance());
+    stickyWidgets[widget->noteIndex()] = widget;
+    connect(widget->textEditor(), &ZTextEdit::indexChanged, this, &Systemtray::commitStickyNoteModifications);
+    connect(widget, &StickyWidget::attach, [widget]() {
+        widget->removeEventFilter(Daemon::instance());
+        //        this->commitStickyNoteModifications(widget);
     });
-    widget->installEventFilter(daemon);
-    updateStickyNotesMenu(widget, true);
+
     widget->show();
 }
-void Systemtray::updateStickyNotesMenu(StickyWidget* widget, bool isAdding)
+void Systemtray::removeNote(const InnerIndex& idx)
 {
-    qDebug() << "call updateStickyNotesMenu";
-    auto generateAction = [&](StickyWidget* widget) {
-        qDebug() << "generateAction";
-        auto rt = new QAction(noteSubmenu);
-        auto elide = [&](const QString& text) {
-            QFontMetrics m(rt->font());
-            return m.elidedText(text.left(50), Qt::ElideRight, 100);
-        };
-        rt->setText(elide(widget->getNote().getOverview()));
-        connect(rt, &QAction::triggered, [widget]() { widget->activateWindow(); });
-        connect(widget, &StickyWidget::textChanged, [rt](const QString& text) {
-            QFontMetrics m(rt->font());
-            rt->setText(m.elidedText(text.left(50), Qt::ElideRight, 100));
-        });
-        return rt;
-    };
-    auto refreshContextMenu = [&]() {
-        contextMenu()->clear();
-        auto add = new QAction(tr("Add"), contextMenu());
-        auto quit = new QAction(tr("Quit"), contextMenu());
-        connect(add, &QAction::triggered, [&]() { addNote(); });
-        connect(quit, &QAction::triggered, qApp, &QApplication::quit);
-        contextMenu()->addAction(add);
-        contextMenu()->addMenu(noteSubmenu);
-        contextMenu()->addAction(quit);
-    };
-    if (isAdding) {
-        qDebug() << "isAdding" << widget->getNote().getOverview();
-        auto action = generateAction(widget);
-        stickyWidgets[widget] = action;
-        noteSubmenu->addAction(action);
-        refreshContextMenu();
-    } else {
-        auto action = stickyWidgets[widget];
-        noteSubmenu->removeAction(action);
-        stickyWidgets.erase(widget);
-        refreshContextMenu();
-        action->deleteLater();
+    assert(stickyWidgets.count(idx));
+    stickyWidgets.erase(idx);
+}
+void Systemtray::activateStickyNote(const InnerIndex& idx)
+{
+    auto widget = stickyWidgets[idx];
+    if (!widget->isActiveWindow()) { //optimize needed
+        widget->setWindowFlags((widget->windowFlags() & Qt::WindowStaysOnTopHint));
+        widget->setWindowFlags((widget->windowFlags() & ~Qt::WindowStaysOnTopHint));
+        widget->show();
     }
 }

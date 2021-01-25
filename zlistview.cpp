@@ -25,7 +25,7 @@ ZListView::ZListView(QWidget* parent)
 
     setItemDelegate(new ItemDelegate(this));
 
-    connect(this, &QListView::clicked, [this](const QModelIndex& cur) { emit curIndexChanged(cur); });
+    connect(this, &QListView::clicked, [this](const QModelIndex& cur) { emit currentIndexChanged(cur); });
 }
 QList<QModelIndex> ZListView::selection() const
 {
@@ -56,9 +56,11 @@ void ZListView::clearSelectionExt()
 void ZListView::setCurrentIndex(const QModelIndex& cur)
 {
     //    if(cur.isValid()&&cur.model()==model())qDebug()<<"call ZListView::setCurrentIndex"<<cur;
+    if (selection() == QList<QModelIndex>({ cur }))
+        return;
     clearSelection();
     selectionModel()->setCurrentIndex(cur, QItemSelectionModel::SelectCurrent);
-    emit curIndexChanged(cur);
+    emit currentIndexChanged(cur);
 }
 void ZListView::setNoBackground(bool b)
 {
@@ -74,7 +76,7 @@ ItemDelegate::ItemDelegate(QWidget* parent)
 }
 void ItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
-    //    qDebug() << "paint" << option << index;
+    //    qDebug() << "paint" << index << option << index;
     if (!index.isValid())
         return;
     painter->save();
@@ -107,7 +109,7 @@ void ItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, 
     mainRect.adjust(0, 0, 0, -20);
     infoRect.adjust(0, 40, 0, 0);
     painter->setPen(QPen(option.palette.text(), 1));
-    painter->drawText(QRectF(mainRect), QFontMetrics(painter->font()).elidedText(data.getOverview(), Qt::ElideRight, 500));
+    painter->drawText(QRectF(mainRect), QFontMetrics(painter->font()).elidedText(data.getAbstract(), Qt::ElideRight, 500));
     auto font = painter->font();
     font.setItalic(true);
     font.setPointSize(8);

@@ -1,0 +1,9 @@
+# 设计
+
+## Note的索引
+
+为了方便Note按更新时间排序，每个ZNote中都存储了updateTime。由于ZListModel的数据存储结构使用的是fhqTreap（一种二叉平衡树）（我也不知道为什么要用平衡树），方便起见平衡树就以updateTime为关键字。因此，对应到上层，可以以updateTime作为Note存取的索引。
+
+这里需要考虑一种使该索引策略失效的情况：有多条Note拥有相同的updateTime。实际上，由于桌面应用的特殊性，该情况在设计中被避免了（正常情况下）。Note的updateTime需要通过commitChange来进行修改，我们设计当主窗口中触发保存操作或主窗口的Note解除吸附或独立的桌面便笺吸附回主窗口/失去焦点时调用commitChange。正常情况下，较短的时间内只可能有一个便笺失去焦点或是一个主窗口Note受到操作，因而避免了多条Note的updateTime相冲突。
+
+新bug：创建新便笺的同时旧便笺失去焦点，这样会使updateTime冲突。

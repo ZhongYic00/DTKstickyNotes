@@ -1,34 +1,37 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
+#include "transparentwidget.h"
+#include "ztextedit.h"
+#include <DInputDialog>
 #include <QtWidgets>
 #include <dboxwidget.h>
-#include <DInputDialog>
-#include "ztextedit.h"
-#include "transparentwidget.h"
 
 DWIDGET_USE_NAMESPACE
-typedef std::pair<QString,QString> pss;
-class Editor:public QWidget
-{
+typedef std::pair<QString, QString> pss;
+class Editor : public QWidget {
     Q_OBJECT
 public:
-    Editor(QWidget *parent=nullptr);
-    void display(const QString &html);
+    Editor(QWidget* parent = nullptr);
+    inline void setNote(const ZNote& note);
     void reset();
-    QString getContentRich() const;
 signals:
-    void contentChanged(const pss);
-    void contentSaved(const QString);
+    void indexUpdated(const InnerIndex& idx);
+
 protected:
-//    void keyPressEvent(QKeyEvent*);
-//    void keyReleaseEvent(QKeyEvent*);
-//    void mousePressEvent(QMouseEvent*);
+    //    void keyPressEvent(QKeyEvent*);
+    //    void keyReleaseEvent(QKeyEvent*);
+    //    void mousePressEvent(QMouseEvent*);
 private:
-    ZTextEdit *textEditor;
-    QWidget *toolBar;
     QWidget* initToolBar();
     QWidget* initToolButtons(QWidget*);
-};
 
+    ZTextEdit* editor;
+};
+void Editor::setNote(const ZNote& note)
+{
+    editor->setNote(note);
+    setEnabled(true);
+    editor->setFocus();
+}
 #endif // EDITOR_H

@@ -6,7 +6,10 @@ ZListModel::ZListModel(QObject* parent)
 }
 int ZListModel::rowCount(const QModelIndex& parent) const
 {
-    return static_cast<int>(items.size());
+    //    qDebug() << __FUNCTION__ << parent << parent.isValid() << items.size();
+    if (parent.isValid())
+        return 0;
+    return items.size();
 }
 QVariant ZListModel::dataRole(const ZNote& rt, int role) const
 {
@@ -14,11 +17,11 @@ QVariant ZListModel::dataRole(const ZNote& rt, int role) const
     case Qt::UserRole:
         return QVariant::fromValue(rt);
     case UpdateTime:
-        return rt.lastModified();
+        return QVariant::fromValue(InnerIndex(rt.lastModified()));
     case Html:
         return rt.getHtml();
-    case Overview:
-        return rt.getOverview();
+    case Abstract:
+        return rt.getAbstract();
     case Attachment:
         return rt.isAttached();
     default:
@@ -28,7 +31,6 @@ QVariant ZListModel::dataRole(const ZNote& rt, int role) const
 QVariant ZListModel::data(const QModelIndex& index, int role) const
 {
     //    qDebug() << "call" << __func__ << index << role;
-    //    qDebug()<<"call data"<<index.row()<<"role"<<role;
     if (!index.isValid())
         return QVariant();
     auto rt = items.getKth(index.row() + 1);
@@ -42,54 +44,49 @@ QVariant ZListModel::data(const InnerIndex& idx, int role) const
 }
 InnerIndex ZListModel::setData(const QModelIndex& index, const InnerIndex& idx, const QVariant& value, const int& role)
 {
-    qDebug(__FUNCTION__);
+    //    qDebug() << __FUNCTION__ << idx << role;
     if (role == Qt::UserRole) {
         items.erase(items.getKth(idx));
         items.insert(value.value<ZNote>());
         emit dataChanged(indexOf(value.value<ZNote>().lastModified()), index, QVector<int>({ Qt::UserRole }));
     }
-    if (role == Overview || role == Html || role == Attachment) {
-        auto str = value.value<QString>();
-        items.modifyKth(idx, [str, role](ZNote* key) {
-            if (role == Overview)
-                key->setOverview(str);
-            else if (role == Html)
-                key->setHtml(str);
-            else if (role == Attachment)
+    if (role & Content || role & Attachment) { //bugs may occur
+        items.modifyKth(idx, [&](ZNote* key) {
+            if (role & Content)
+                key->setContent(value.value<QTextDocumentFragment>());
+            if (role & Attachment)
                 key->toggleAttach();
-            else
-                qDebug() << "ZListModel::setData error";
         });
-        emit dataChanged(index, index, QVector<int>({ role }));
-    } else if (role == UpdateTime) {
+        emit dataChanged(index, index, QVector<int>({ Qt::UserRole }));
+    }
+    if (role & UpdateTime) {
         auto itemData = items.getKth(idx);
         items.erase(itemData);
         itemData.commitChange();
         items.insert(itemData);
         emit dataChanged(indexOf(itemData.getUpdateTimeRaw()), index, QVector<int>({ Qt::UserRole }));
-        return itemData.getUpdateTimeRaw();
+        return InnerIndex(itemData.lastModified());
     }
     return InnerIndex();
 }
 void ZListModel::appendRow(const ZNote& value)
 {
     int pos = items.queryIndex(value);
-    qDebug() << __FUNCTION__ << value.lastModified() << "at" << pos;
+    //    qDebug() << __FUNCTION__ << value.lastModified() << "at" << pos;
     beginInsertRows(QModelIndex(), pos, pos);
-    emit layoutAboutToBeChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
+    //emit layoutAboutToBeChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
     items.insert(value);
-    //   changePersistentIndexList();
-    emit layoutChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
+    //emit layoutChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::VerticalSortHint);
     endInsertRows();
 }
 void ZListModel::removeRow(const ZNote& value)
 {
     int index = items.queryIndex(value) - 1;
     beginRemoveRows(QModelIndex(), index, index);
-    emit layoutAboutToBeChanged();
+    //emit layoutAboutToBeChanged();
+    //    qDebug() << items;
     items.erase(value);
-    //    changePersistentIndexList();
-    emit layoutChanged();
+    //emit layoutChanged();
     endRemoveRows();
 }
 QList<ZNote> ZListModel::exportAll() const
@@ -99,5 +96,9 @@ QList<ZNote> ZListModel::exportAll() const
 }
 void ZListModel::dbg()
 {
-    qDebug() << "max depth" << items.depth();
+    qDebug() << rowCount() << "items in model:";
+    for (auto i = 0; i < rowCount(); i++) {
+        auto idx = index(i);
+        qDebug() << idx.data(Qt::UserRole).value<ZNote>() << "attachment:" << idx.data(Attachment);
+    }
 }

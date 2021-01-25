@@ -15,7 +15,7 @@ public:
     void setCurrentIndex(const QModelIndex& cur);
     void setNoBackground(bool b);
 signals:
-    void curIndexChanged(const QModelIndex& cur);
+    void currentIndexChanged(const QModelIndex& cur);
     void listEmptied();
 };
 

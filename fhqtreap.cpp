@@ -56,7 +56,7 @@ public:
     }
     void insert(const ValueType& value)
     {
-        //        qDebug()<<"insert"<<value.getOverview();
+        //        qDebug()<<"insert"<<value.getAbstract();
         tree few, more, cur = new Node(value);
         split(root, value, few, more);
         root = merge(few, merge(cur, more));
@@ -115,6 +115,14 @@ public:
             rt = std::max(rt, depth(t->ch[1], d));
         return rt;
     }
+    friend QDebug operator<<(QDebug o, Treap& t)
+    {
+        o << "Treap" << t.size() << "items:";
+        for (auto i : t.getAll()) {
+            o << i;
+        }
+        return o;
+    }
 #endif
 
 private:
@@ -124,7 +132,7 @@ private:
     {
         return rand();
     }
-    void split(const tree& t, const int& jud, tree& l, tree& r)
+    void split(const tree t, const int& jud, tree& l, tree& r)
     {
         if (!t)
             return (void)(l = r = nullptr);
@@ -135,7 +143,7 @@ private:
             r = t, split(t->ch[0], jud, l, t->ch[0]);
         t->maintain();
     }
-    void split(const tree& t, const ValueType& jud, tree& l, tree& r) // split whatever greater than jud into right subTree
+    void split(const tree t, const ValueType& jud, tree& l, tree& r) // split whatever greater than jud into right subTree
     {
         if (!t)
             return (void)(l = r = nullptr);
@@ -145,7 +153,7 @@ private:
             r = t, split(t->ch[0], jud, l, t->ch[0]);
         t->maintain();
     }
-    void upper_split(const tree& t, const ValueType& jud, tree& l, tree& r) // split whatever smaller than jud into left subTree
+    void upper_split(const tree t, const ValueType& jud, tree& l, tree& r) // split whatever smaller than jud into left subTree
     {
         if (!t)
             return (void)(l = r = nullptr);

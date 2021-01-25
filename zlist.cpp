@@ -1,17 +1,22 @@
 #include "zlist.h"
+#include "daemon.h"
 #include "editor.h"
+#include <QAbstractItemModelTester>
 
 DGUI_USE_NAMESPACE
 ZList::ZList(QWidget* parent)
     : QWidget(parent)
-    , haveChange(false)
 {
     //    qDebug()<<curIdx;
     listview = new ZListView(this);
     model = new QSortFilterProxyModel(this);
-    model->setSourceModel(Daemon::instance()->getModel());
+    model->setSourceModel(Daemon::instance()->sourceModel());
     model->setFilterRole(ZListModel::Attachment);
     model->setFilterFixedString("true");
+    //    model->setDynamicSortFilter(false);
+
+    //    QLoggingCategory::setFilterRules("qt.modeltest.debug=true");
+    //    new QAbstractItemModelTester(model, QAbstractItemModelTester::FailureReportingMode::Fatal, this);
 
     listview->setModel(model);
     listview->setNoBackground(true);
@@ -22,9 +27,7 @@ ZList::ZList(QWidget* parent)
 
     listview->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(listview, &QListView::customContextMenuRequested, [this](const QPoint& pos) { popupMenu(mapToGlobal(pos)); });
-    connect(listview, &ZListView::curIndexChanged, this, &ZList::currentChanged);
-    connect(this, &ZList::currentChanged,
-        [this](QModelIndex index) { this->curIdx = index.data(Qt::UserRole).value<ZNote>().getUpdateTimeRaw(); });
+    connect(listview, &ZListView::currentIndexChanged, this, &ZList::currentChanged);
     connect(listview, &ZListView::listEmptied, [this]() { emit listEmptied(); });
 }
 QWidget* ZList::initAddButton()
@@ -99,55 +102,34 @@ void ZList::removeItems(const QList<ZNote>& items)
 {
     Daemon::instance()->removeItems(items);
 }
-void ZList::setCurrentOverview(const QString& overview)
-{
-    haveChange = true;
-    auto curIndex = listview->currentIndex();
-    model->setData(curIndex, QVariant::fromValue(overview), ZListModel::Overview);
-}
-void ZList::setCurrentHtml(const QString& html)
-{
-    haveChange = true;
-    auto curIndex = listview->currentIndex();
-    model->setData(curIndex, QVariant::fromValue(html), ZListModel::Html);
-}
-void ZList::commitChange(bool trace) //优化逻辑，若通过save主动commit，后续setIndex时可能再次触发commit
-{
-    haveChange = false;
-    curIdx = Daemon::instance()->commitChange(curIdx, false);
-    if (trace)
-        listview->setCurrentIndex(model->index(0, 0));
-}
 void ZList::popupMenu(const QPoint& pos)
 {
     auto selection = listview->selectionNotes();
     QMenu* menu = new QMenu();
     QAction* removeAction = new QAction(QIcon(":/images/trash-empty"), tr("删除"), menu);
-    auto indexOf = [=](InnerIndex& idx) { return this->model->mapFromSource(Daemon::instance()->getModel()->indexOf(idx)); };
-    connect(removeAction, &QAction::triggered, [&selection, this, &indexOf]() {
+    connect(removeAction, &QAction::triggered, [&selection, this]() {
         listview->clearSelectionExt();
         removeItems(selection);
-        listview->setCurrentIndex(indexOf(curIdx));
+        //        listview->setCurrentIndex(indexOf(curIdx));
     });
     menu->addAction(removeAction);
     if (selection.length() == 1) {
         QAction* detachAction = new QAction(tr("解除吸附"), menu);
         auto index = listview->selection()[0];
-        connect(detachAction, &QAction::triggered, [index, this, &indexOf]() {
+        connect(detachAction, &QAction::triggered, [index, this]() {
             listview->clearSelectionExt();
-            Daemon::instance()->detach(index.data(ZListModel::UpdateTime).value<QDateTime>());
-            listview->setCurrentIndex(indexOf(curIdx));
+            Daemon::instance()->sourceModel()->dbg();
+            qDebug() << "toggle attachment of" << index.data(ZListModel::IndexRole).value<InnerIndex>();
+            Daemon::instance()->toggleAttach(index.data(ZListModel::IndexRole).value<InnerIndex>());
+            Daemon::instance()->sourceModel()->dbg();
+            //            listview->setCurrentIndex(indexOf(curIdx));
         });
         menu->addAction(detachAction);
     }
     menu->exec(pos);
 }
-void ZList::setCurrentIndex(const QModelIndex& cur)
-{
-    if (cur.isValid())
-        listview->setCurrentIndex(cur);
-}
-QAbstractItemModel* ZList::getModel()
+void ZList::setCurrentIndex(const InnerIndex& idx) { listview->setCurrentIndex(model->mapFromSource(Daemon::instance()->sourceModel()->indexOf(idx))); }
+QAbstractItemModel* ZList::sourceModel()
 {
     return model;
 }
