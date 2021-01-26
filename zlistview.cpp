@@ -134,17 +134,17 @@ void ItemDelegate::drawMultilineElidedText(QPainter* painter, const QRectF& rect
     option.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
     layout.setTextOption(option);
     layout.beginLayout();
-    for (int lineSpacing = painter->fontMetrics().lineSpacing(), y = 0;;) {
+    for (int lineSpacing = painter->fontMetrics().lineSpacing(), ascent = painter->fontMetrics().ascent(), descent = painter->fontMetrics().descent(), y = 0;;) {
         QTextLine line = layout.createLine();
         if (!line.isValid())
             break;
         line.setLineWidth(rect.width());
-        if (rect.height() > y + lineSpacing) {
+        if (rect.height() > y + lineSpacing + ascent) {
             line.draw(painter, QPointF(rect.x(), rect.y() + y));
             y += lineSpacing;
         } else {
             QString lastLine = painter->fontMetrics().elidedText(str.mid(line.textStart()), Qt::ElideRight, rect.width());
-            painter->drawText(QPointF(rect.x(), rect.y() + y + painter->fontMetrics().ascent()), lastLine);
+            painter->drawText(QPointF(rect.x(), rect.y() + y + ascent), lastLine);
             break;
         }
     }

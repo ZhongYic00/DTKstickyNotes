@@ -81,4 +81,9 @@ DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 DISTFILES += \
     mainwindow.qss \
-    mainwindow.qss
+    mainwindow.qss \
+    resources/translations/en_US.qm \
+    resources/translations/zh_CN.qm
+TRANSLATIONS += \
+    resources/translations/zh_CN.ts \
+    resources/translations/en_US.ts

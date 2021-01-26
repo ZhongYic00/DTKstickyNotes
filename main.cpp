@@ -48,6 +48,14 @@ int main(int argc, char* argv[])
 #endif
     QLoggingCategory::defaultCategory()->setEnabled(QtDebugMsg, true);
 
+    QTranslator qtTranslator;
+    qtTranslator.load("qt_" + QLocale::system().name(),
+        QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    app.installTranslator(&qtTranslator);
+    QTranslator translator;
+    translator.load(QLocale::system(), ":/translations/" + QLocale::system().name() + ".qm");
+    app.installTranslator(&translator);
+
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName(APPLICATION_NAME);
@@ -59,7 +67,7 @@ int main(int argc, char* argv[])
     app.setApplicationVersion(APP_VERSION);
     app.setOrganizationName("RubbishTech");
     app.setOrganizationDomain("https://github.com/zhongyic00/");
-    app.setProductName(QObject::tr("深度便笺"));
+    app.setProductName(QObject::tr("便笺"));
     app.setProductIcon(QIcon(":/images/logo.svg.png"));
     /*QIcon companyLogo(":/images/ZhYiclogo_v2");
     app.aboutDialog()->setCompanyLogo(companyLogo.pixmap(100, 100));

@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget* parent)
     mainLayout->addWidget(spliter);
     mainLayout->addWidget(noteEditor);
     mainLayout->addSpacing(5);
-    titlebar()->setTitle("深度便笺");
+    titlebar()->setTitle(tr("便笺"));
     titlebar()->setIcon(QIcon(":/images/logo256"));
     titlebar()->setFixedHeight(40);
     for (auto i : titlebar()->children()) { // adjust titlebar buttons so that they're vertical-centered
