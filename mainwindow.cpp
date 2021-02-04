@@ -3,6 +3,7 @@
 #include <DApplication>
 #include <DThemeManager>
 #include <DVerticalLine>
+#include <QDebug>
 
 DTK_USE_NAMESPACE
 

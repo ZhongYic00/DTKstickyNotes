@@ -13,8 +13,10 @@ ZTextEdit::ZTextEdit(QWidget* parent, bool DStyle)
     , marginBottom(0)
     , marginTop(0)
 {
-    blockSignals(true);
+    const QSignalBlocker blocker(this);
+
     auto p = palette();
+    qDebug() << p.currentColorGroup();
     p.setBrush(QPalette::Dark, QBrush(QColor(130, 130, 130)));
     setPalette(p);
     setTextInteractionFlags(textInteractionFlags() | Qt::LinksAccessibleByMouse);
@@ -26,7 +28,6 @@ ZTextEdit::ZTextEdit(QWidget* parent, bool DStyle)
         commitModifications();
         //此处应采用事件队列，降低修改操作频率
     });
-    blockSignals(false);
 }
 
 void ZTextEdit::keyPressEvent(QKeyEvent* e)
@@ -61,55 +62,78 @@ bool ZTextEdit::event(QEvent* e)
 
 void ZTextEdit::insertFromMimeData(const QMimeData* src)
 {
-    //    qDebug() << src->formats();
-    //    qDebug() << src->html();
     if (!src->hasHtml() && src->hasImage()) {
-        //        qDebug() << "insert image detected";
         pInsImage(src->imageData());
+    } else if (src->hasText() and !src->hasHtml()) {
+        textCursor().insertText(src->text());
     } else {
         //        qDebug() << "insert html detected";
         auto cursor = textCursor();
         cursor.beginEditBlock();
-        auto bak = cursor.charFormat();
-        auto blkbak = cursor.blockFormat();
-        auto fmt = QTextCharFormat(bak);
-        fmt.clearProperty(QTextCharFormat::FontWeight);
-        fmt.clearProperty(QTextCharFormat::FontItalic);
-        fmt.clearProperty(QTextCharFormat::FontUnderline);
-        fmt.clearProperty(QTextCharFormat::FontStrikeOut);
-        fmt.setProperty(QTextCharFormat::FontPointSize, bak.property(QTextCharFormat::FontPointSize));
-        fmt.setForeground(bak.foreground());
-        fmt.setBackground(bak.background());
-        auto blkfmt = QTextBlockFormat();
-        blkfmt.setBackground(bak.background());
-        blkfmt.setProperty(QTextBlockFormat::FontPointSize, blkbak.property(QTextBlockFormat::FontPointSize));
-        blkfmt.setProperty(QTextBlockFormat::LineHeight, 0);
-        blkfmt.setBottomMargin(0);
-        blkfmt.setTopMargin(0);
         if (cursor.hasSelection())
             cursor.removeSelectedText();
+
+        auto doc = src->html();
+        //remove title marks
+        doc.replace(QRegExp("<h\\d[^>]*>"), "<b>");
+        doc.replace(QRegExp("</h\\d>"), "</b>");
+        //remove table marks
+        doc.remove(QRegExp("</?table[^>]*>"));
+        doc.remove(QRegExp("</?tr[^>]*>"));
+        doc.remove(QRegExp("</?th[^>]*>"));
+        doc.replace(QRegExp("</?td[^>]*>"), "&nbsp;");
+        doc.remove(QRegExp("</?tbody[^>]*>"));
+        doc.remove(QRegExp("</?tfoot[^>]*>"));
+        doc.remove(QRegExp("</?thead[^>]*>"));
+
+        auto currentCharFormat = this->currentCharFormat();
+        auto fmt = QTextCharFormat();
+        auto blkfmt = QTextBlockFormat();
+
+        auto reservedProperties = {
+            QTextFormat::FontWeight,
+            QTextFormat::TextUnderlineStyle,
+            QTextFormat::FontItalic,
+            QTextFormat::FontStrikeOut,
+            QTextFormat::TextUnderlineStyle,
+            QTextFormat::AnchorHref,
+            QTextFormat::AnchorName,
+            QTextFormat::IsAnchor
+        };
+        std::list<std::pair<QTextFormat::Property, QVariant>> filteredProperties = {
+            { QTextFormat::BackgroundBrush, QVariant::fromValue(Qt::black) },
+            { QTextFormat::ForegroundBrush, QVariant::fromValue(Qt::black) },
+            { QTextFormat::FontPixelSize, QVariant::fromValue(int(ZTextEdit::DefaultFontPointSize)) },
+            { QTextFormat::BlockAlignment, QVariant::fromValue(int(Qt::AlignLeft)) },
+            { QTextFormat::LineHeight, QVariant::fromValue(0) },
+            { QTextFormat::BlockTopMargin, QVariant::fromValue(qreal(0)) },
+            { QTextFormat::BlockBottomMargin, QVariant::fromValue(qreal(0)) },
+        };
+        for (auto i : reservedProperties)
+            fmt.clearProperty(i);
+        for (auto i : filteredProperties)
+            fmt.setProperty(i.first, i.second);
+        for (auto i : filteredProperties)
+            blkfmt.setProperty(i.first, i.second);
+
         int uninsertedPos = cursor.position();
-        if (!uninsertedPos)
-            cursor.insertText(" ");
-        cursor.insertHtml(src->html());
+
+        cursor.insertHtml(doc);
         int insertedPos = cursor.position();
         cursor.setPosition(uninsertedPos, QTextCursor::MoveAnchor);
         cursor.setPosition(insertedPos, QTextCursor::KeepAnchor);
+
+        //remove invalid formats
         cursor.mergeCharFormat(fmt);
         cursor.mergeBlockFormat(blkfmt);
-        cursor.setPosition(insertedPos, QTextCursor::MoveAnchor);
-        setTextBackgroundColor(bak.background().color());
-        if (!uninsertedPos) //在空白textEdit中粘贴文本会，然后全选删除，会出现原因不明的光标下格式错误。
-        {
-            QTextCursor csr(cursor);
-            csr.setPosition(0);
-            csr.deleteChar();
-        }
-        setCurrentCharFormat(bak);
+
+        cursor.setPosition(insertedPos, QTextCursor::MoveAnchor); //reset cursor
+        //        setTextBackgroundColor(currentCharFormat.background().color());
+        //        if (!uninsertedPos) //在空白textEdit中粘贴文本会，然后全选删除，会出现原因不明的光标下格式错误。?
+        setCurrentCharFormat(currentCharFormat.toCharFormat());
         cursor.endEditBlock();
-        auto html = toHtml();
-        updateResourcesList(html);
-        DTextEdit::setHtml(html);
+
+        updateResourcesList(toHtml());
         updateResources();
     }
 }
@@ -165,7 +189,7 @@ void ZTextEdit::pSplitline()
 {
     auto cursor = textCursor();
     cursor.beginEditBlock();
-    cursor.insertHtml("<hr style=\"border-width:2px\"><br />");
+    cursor.insertHtml("<hr /><br />");
     cursor.deletePreviousChar();
     cursor.endEditBlock();
 }
@@ -258,23 +282,25 @@ void ZTextEdit::updateCharFormat(const QTextCharFormat& nwfmt)
     emit fLinethroughState(nwfmt.fontStrikeOut());
     emit pIsUrl(nwfmt.isAnchor());
 }
-void ZTextEdit::setHtml(QString html)
+void ZTextEdit::setHtml(const QString& html)
 {
     //    qDebug() << "call ZTextEdit::setHtml";
+    qDebug() << html;
     updateResourcesList(html);
     updateResources();
     DTextEdit::setHtml(html);
+    qDebug() << toHtml();
     updateDocumentFormat();
+    qDebug() << toHtml();
 }
 void ZTextEdit::setBottomMargin(int d)
 {
     marginBottom = d;
     { // init document format
-        blockSignals(true);
+        const QSignalBlocker blocker(this);
         QTextFrameFormat fmt;
         fmt.setBottomMargin(marginBottom);
         document()->rootFrame()->setFrameFormat(fmt);
-        blockSignals(false);
     }
 }
 void ZTextEdit::setTopMargin(int d)
@@ -283,12 +309,11 @@ void ZTextEdit::setTopMargin(int d)
 }
 void ZTextEdit::updateDocumentFormat()
 {
-    blockSignals(true);
+    const QSignalBlocker blocker(this);
     QTextFrameFormat fmt;
     fmt.setBottomMargin(marginBottom);
     fmt.setTopMargin(marginTop);
     document()->rootFrame()->setFrameFormat(fmt);
-    blockSignals(false);
 }
 QImage ZTextEdit::processImage(const QByteArray& data)
 {
@@ -317,7 +342,7 @@ void ZTextEdit::updateResources()
         document()->addResource(QTextDocument::ImageResource, "" + i, (processImage(Daemon::instance()->fetchImageData(i))));
     }
 }
-void ZTextEdit::updateResourcesList(QString& html)
+void ZTextEdit::updateResourcesList(QString html)
 {
     QRegExp reg("<img src=\"([^\"]*)\"");
     resources.clear();
@@ -349,8 +374,7 @@ void ZTextEdit::commitModifications()
 void ZTextEdit::setNote(const ZNote& d)
 {
     idx = InnerIndex(d.lastModified());
-    blockSignals(true);
+    const QSignalBlocker blocker(this);
     setHtml(d.getHtml());
     moveCursor(QTextCursor::End);
-    blockSignals(false);
 }

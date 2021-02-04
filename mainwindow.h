@@ -5,7 +5,6 @@
 #include <DSearchEdit>
 #include <DTabBar>
 #include <DTitlebar>
-#include <QDebug>
 #include <QtWidgets>
 
 #include "editor.h"

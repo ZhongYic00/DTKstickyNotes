@@ -25,7 +25,6 @@ public slots:
     void pInsCode();
     QString getUrlString();
     void updateCharFormat(const QTextCharFormat&);
-    void setHtml(QString html);
     void setBottomMargin(int d);
     void setTopMargin(int d);
 signals:
@@ -46,13 +45,19 @@ protected:
 private slots:
 
 private:
-    void fEdit(QTextCharFormat&);
+    enum DefaultCharFormatProperty {
+        DefaultFontPointSize = 14,
+    };
+
+    void
+    fEdit(QTextCharFormat&);
     void updateDocumentFormat();
     void initResources();
     QImage processImage(const QByteArray& data);
     void updateResources();
-    void updateResourcesList(QString& html);
+    void updateResourcesList(QString html);
     void commitModifications();
+    void setHtml(const QString& html);
 
     QTextCharFormat sample;
     QStringList resources;
